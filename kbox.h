@@ -6,6 +6,7 @@
 #include <linux/notifier.h>
 #include <linux/ioctl.h>
 
+#define PHD
 
 #define KBOX_IOC_MAGIC 'k'
 #define KBOX_REGISTER_TYPE _IOW(KBOX_IOC_MAGIC, 100, unsigned long)

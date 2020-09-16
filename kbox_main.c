@@ -5,6 +5,7 @@
 #include "kbox.h"
 #include "kbox_console.h"
 #include "kbox_notifier.h"
+#include "kbox_netlink.h"
 #include "kbox_output.h"
 
 
@@ -28,6 +29,10 @@ static int __init kbox_init(void)
 	DO_INFO_IF_EXPR_UNLIKELY(ret, 
         KBOX_LOG(KLOG_ERROR, "kbox_init_notifier failed! ret = %d\n", ret); goto fail;);
 
+	ret = kbox_init_netlink();
+	DO_INFO_IF_EXPR_UNLIKELY(ret, 
+        KBOX_LOG(KLOG_ERROR, "kbox_init_netlink failed! ret = %d\n", ret); goto fail;);	
+
 	KBOX_LOG(KLOG_DEBUG, "kbox init ok, version is %s\n", KBOX_VERSION);
 	//kbox_write_to_syscom("kbox init ok\n", strlen("kbox init ok\n"));
 
@@ -43,6 +48,7 @@ fail:
 
 static void __exit kbox_exit(void)
 {
+	kbox_cleanup_netlink();
 	kbox_cleanup_notifier();
 	kbox_cleanup_output();
 	kbox_cleanup_console();

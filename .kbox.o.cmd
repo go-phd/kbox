@@ -1,1 +1,0 @@
-cmd_/media/sf_code/kbox/kbox.o := ld -m elf_x86_64   -r -o /media/sf_code/kbox/kbox.o /media/sf_code/kbox/kbox_notifier.o /media/sf_code/kbox/kbox_output.o /media/sf_code/kbox/kbox_ipmi.o /media/sf_code/kbox/kbox_pcie.o /media/sf_code/kbox/kbox_console.o /media/sf_code/kbox/kbox_collect.o ; scripts/mod/modpost /media/sf_code/kbox/kbox.o
