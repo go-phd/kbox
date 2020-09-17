@@ -6,17 +6,13 @@
 #include <linux/notifier.h>
 #include <linux/ioctl.h>
 
-#define PHD
 
-#define KBOX_IOC_MAGIC 'k'
-#define KBOX_REGISTER_TYPE _IOW(KBOX_IOC_MAGIC, 100, unsigned long)
-
+#define UNUSED(x) (x = x)
 
 enum {
     KLOG_DEBUG = 0,
     KLOG_ERROR = 1,
 };
-
 
 extern int debug_level;
 #define KBOX_LOG(level, fmt, args...) do {\

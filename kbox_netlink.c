@@ -5,8 +5,6 @@
 #include "kbox_netlink.h"
 
 
-//#define TESTBC
-
 struct sock *nlsk = NULL;
 extern struct net init_net;
 
@@ -126,29 +124,6 @@ struct netlink_kernel_cfg cfg = {
 	.input = kbox_netlink_rcv_msg,
 };  
 
-#ifdef TESTBC
-
-struct timer_list timer;
-#define TIMER_INTERVAL_CHECK		(HZ / 10)
-
-static void test_timeout(struct timer_list *t)
-{
-	int ret = 0;
-	char *kmsg1 = "hello users1!!!";
-	char *kmsg2 = "hello users2!!!";
-
-	ret = kbox_broadcast(KBOX_NLGRP_DEVICE_EVENT, KBOX_NL_CMD_REBOOT, kmsg1, strlen(kmsg1), GFP_ATOMIC);
-	KBOX_LOG(KLOG_ERROR, "---kbox_broadcast KBOX_NLGRP_DEVICE_EVENT %s, ret = %d\n", kmsg1, ret);
-
-	ret = kbox_broadcast(KBOX_NLGRP_SYSTEM_EVENT, KBOX_NL_CMD_PANIC, kmsg2, strlen(kmsg2), GFP_ATOMIC);
-	KBOX_LOG(KLOG_ERROR, "---kbox_broadcast KBOX_NLGRP_SYSTEM_EVENT %s, ret = %d\n", kmsg2, ret);
-	
-	(void)mod_timer(&timer, jiffies_64 + 10 * HZ);
-}
-
-#endif
-
-
 int kbox_init_netlink(void)
 {
 	struct sock *sk = NULL;
@@ -158,7 +133,6 @@ int kbox_init_netlink(void)
         KBOX_LOG(KLOG_ERROR, "netlink_kernel_create failed!\n"););
 
 	nlsk = sk;
-    KBOX_LOG(KLOG_DEBUG, "kbox_init_notify success.\n");
 
 #ifdef TESTBC
 	timer_setup(&timer, test_timeout, 0);
@@ -179,7 +153,6 @@ void kbox_cleanup_netlink(void)
         netlink_kernel_release(nlsk); /* release ..*/
         nlsk = NULL;
     }   
-    KBOX_LOG(KLOG_DEBUG, "kbox_cleanup_notify!\n");
 }
 
 

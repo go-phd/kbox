@@ -2,13 +2,12 @@
 #ifndef _KBOX_NETLINK_H
 #define _KBOX_NETLINK_H
 
-#include <linux/ipmi.h>
+
 #include <linux/module.h>
 #include <linux/hwmon.h>
 #include <linux/hwmon-sysfs.h>
 #include <linux/jiffies.h>
 #include <linux/mutex.h>
-#include <linux/slab.h>
 #include <linux/err.h>
 
 #include "kbox.h"

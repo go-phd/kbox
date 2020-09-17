@@ -7,6 +7,8 @@
 #include "kbox_notifier.h"
 #include "kbox_netlink.h"
 #include "kbox_output.h"
+#include "kbox_cdev.h"
+#include "kbox_monitor.h"
 
 
 #define KBOX_VERSION "V1.0.0"
@@ -31,16 +33,26 @@ static int __init kbox_init(void)
 
 	ret = kbox_init_netlink();
 	DO_INFO_IF_EXPR_UNLIKELY(ret, 
-        KBOX_LOG(KLOG_ERROR, "kbox_init_netlink failed! ret = %d\n", ret); goto fail;);	
+        KBOX_LOG(KLOG_ERROR, "kbox_init_netlink failed! ret = %d\n", ret); goto fail;);
+
+	ret = kbox_init_monitor();
+	DO_INFO_IF_EXPR_UNLIKELY(ret,
+        KBOX_LOG(KLOG_ERROR, "kbox_init_netlink failed! ret = %d\n", ret); goto fail;);
+
+	ret = kbox_init_cdev();
+	DO_INFO_IF_EXPR_UNLIKELY(ret,
+        KBOX_LOG(KLOG_ERROR, "kbox_init_cdev failed! ret = %d\n", ret); goto fail;);
 
 	KBOX_LOG(KLOG_DEBUG, "kbox init ok, version is %s\n", KBOX_VERSION);
-	//kbox_write_to_syscom("kbox init ok\n", strlen("kbox init ok\n"));
 
 	return 0;
 
 fail:
 	kbox_cleanup_console();
 	kbox_cleanup_output();
+	kbox_cleanup_notifier();
+	kbox_cleanup_netlink();
+	kbox_cleanup_monitor();
 
     return ret;
 }
@@ -48,6 +60,8 @@ fail:
 
 static void __exit kbox_exit(void)
 {
+	kbox_cleanup_cdev();
+	kbox_cleanup_monitor();
 	kbox_cleanup_netlink();
 	kbox_cleanup_notifier();
 	kbox_cleanup_output();
@@ -59,6 +73,9 @@ static void __exit kbox_exit(void)
 module_init(kbox_init);
 module_exit(kbox_exit);
 
+MODULE_AUTHOR("YCWL TECHNOLOGIES CO., LTD.");
+MODULE_DESCRIPTION("KBOX DRIVER");
 MODULE_LICENSE("GPL");
+MODULE_VERSION(KBOX_VERSION);
 
 
