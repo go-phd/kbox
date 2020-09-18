@@ -17,6 +17,7 @@ void kbox_console_debug_print(void)
 {
 	//int i = 0;
 
+	KBOX_LOG(KLOG_ERROR, "g_printk_info_buf_tmp = %s\n", g_printk_info_buf_tmp);
 	KBOX_LOG(KLOG_ERROR, "g_printk_info_buf = %s\n", g_printk_info_buf);
 	KBOX_LOG(KLOG_ERROR, "idx = %d, len = %d\n", g_printk_ctrl_block_tmp.idx, g_printk_ctrl_block_tmp.valid_len);
 	/*for (i = 0; i < g_printk_ctrl_block_tmp.valid_len; i++) {

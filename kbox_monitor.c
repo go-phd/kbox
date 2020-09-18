@@ -33,12 +33,11 @@ static int monitor_thread(void *arg)
 
 	KBOX_LOG(KLOG_DEBUG, "monitor thread start\n");
 
-	kbox_dump_event(KBOX_DIE_EVENT, 1, "test panic");
-	kbox_dump_debug_print();
+	//kbox_dump_event(KBOX_DIE_EVENT, 1, "test panic");
+	//kbox_dump_debug_print();
+	//kbox_console_debug_print();
 
 	while (!kthread_should_stop()) {
-		//KBOX_LOG(KLOG_DEBUG, "\n");
-		//kbox_console_debug_print();
 		monitor_cpu(monitor);
 		msleep(KBOX_SLEEP_TIME);
 	}

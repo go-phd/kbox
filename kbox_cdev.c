@@ -8,11 +8,39 @@
 
 #include "kbox_cdev.h"
 #include "kbox_ram_image.h"
+#include "kbox_ram_op.h"
+#include "kbox_dump.h"
+
 
 #define KBOX_DEVICE_NAME "kbox"
 #define KBOX_DEVICE_MINOR 255
 
 static struct kbox_dev_s *g_kbox_dev;
+
+static ssize_t kbox_read(struct file *filp, char __user *data, size_t count,
+			 loff_t *ppos)
+{
+	int read_len = 0;
+
+	if (!filp || !data || !ppos) {
+		KBOX_LOG(KLOG_ERROR, "input NULL point!\n");
+		return -EFAULT;
+	}
+
+	// test
+	//kbox_dump_event(KBOX_DIE_EVENT, 1, "test panic");
+
+	read_len = kbox_read_op((long long)(*ppos),
+				count,
+				data);
+	if (read_len < 0)
+		return -EFAULT;
+
+	*ppos = read_len;
+
+	return read_len;
+}
+
 
 static int kbox_ioctl_verify_cmd(unsigned int cmd, unsigned long arg)
 {
@@ -57,8 +85,8 @@ static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 static int kbox_mmap(struct file *filp, struct vm_area_struct *vma)
 {
-	unsigned long kbox_section_phy_addr = KBOX_RESERVERED_MEMORY;
-	unsigned long kbox_section_len = KBOX_RESERVERED_MEMORY_LEN;
+	unsigned long kbox_section_phy_addr = kbox_get_section_phy_addr(KBOX_SECTION_ALL);
+	unsigned long kbox_section_len = kbox_get_section_len(KBOX_SECTION_ALL);
 	unsigned long offset = 0;
 	unsigned long length = 0;
 	unsigned long vm_size = 0;
@@ -133,6 +161,7 @@ int kbox_release(struct inode *pinode, struct file *filp)
 
 const struct file_operations kbox_fops = {
 	.owner = THIS_MODULE,
+	.read = kbox_read,
 	.unlocked_ioctl = kbox_ioctl,
 	.mmap = kbox_mmap,
 	.open = kbox_open,

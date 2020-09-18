@@ -121,18 +121,68 @@ int kbox_memset_ram(unsigned long offset, unsigned int count,
 	return 0;
 }
 
-/*
-char kbox_checksum(const char *input_buf, unsigned int len)
+int kbox_read_op(long long offset, unsigned int count, char __user *data)
 {
-	unsigned int idx = 0;
-	char checksum = 0;
+	unsigned int read_bytes = 0;
+	unsigned int read_len = 0;
+	unsigned int left_len = count;
+	char *user_buf = data;
+	char *temp_buf_char = NULL;
+	unsigned long offset_tmp = offset;
 
-	for (idx = 0; idx < len; idx++)
-		checksum += input_buf[idx];
+	if (!data) {
+		KBOX_LOG(KLOG_ERROR, "input NULL point!\n");
+		return -EFAULT;
+	}
 
-	return checksum;
+	if (down_interruptible(&user_sem) != 0)
+		return -EFAULT;
+
+	temp_buf_char = kmalloc(TEMP_BUF_DATA_SIZE, GFP_KERNEL);
+	if (!temp_buf_char) {
+		KBOX_LOG(KLOG_ERROR, "kmalloc temp_buf_char fail!\n");
+		up(&user_sem);
+		return -ENOMEM;
+	}
+
+	memset((void *)temp_buf_char, 0, TEMP_BUF_DATA_SIZE);
+
+	while (1) {
+		if (read_len >= count)
+			break;
+
+		read_bytes =
+			(left_len >
+			 TEMP_BUF_DATA_SIZE) ? TEMP_BUF_DATA_SIZE : left_len;
+
+		if (kbox_read_from_ram
+			(offset_tmp, read_bytes, temp_buf_char, KBOX_SECTION_ALL) < 0) {
+			KBOX_LOG(KLOG_ERROR, "kbox_read_from_ram fail!\n");
+			break;
+		}
+
+		if (copy_to_user(user_buf, temp_buf_char, read_bytes)) {
+			KBOX_LOG(KLOG_ERROR, "copy_to_user fail!\n");
+			break;
+		}
+
+		left_len -= read_bytes;
+		read_len += read_bytes;
+		user_buf += read_bytes;
+
+		offset_tmp += read_bytes;
+		memset((void *)temp_buf_char, 0, TEMP_BUF_DATA_SIZE);
+
+		msleep(20);
+	}
+
+	kfree(temp_buf_char);
+
+	up(&user_sem);
+
+	return (int)read_len;
 }
-*/
+
 
 static int kbox_update_super_block(struct image_super_block_s *kbox_super_block)
 {

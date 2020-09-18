@@ -22,7 +22,7 @@ struct kbox_ctrl_block_tmp_s {
 	unsigned int valid_len;		// valid length 
 };
 
-
+int kbox_read_op(long long offset, unsigned int count, char __user *data);
 int kbox_read_super_block(struct image_super_block_s *kbox_super_block);
 int kbox_super_block_init(void);
 int kbox_write_panic_info(const char *input_data, unsigned int data_len);

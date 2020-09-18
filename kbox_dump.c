@@ -123,17 +123,10 @@ static void kbox_show_time_stamps(void)
 	rtc_time64_to_tm(uptime.tv_sec, &rtc_time_val);
 
 	kbox_dump_painc_info
-		("Current time         : %04d-%02d-%02d %02d:%02d:%02d\n",
+		("\nCurrent time         : %04d-%02d-%02d %02d:%02d:%02d\n",
 		 rtc_time_val.tm_year + 1900, rtc_time_val.tm_mon + 1,
 		 rtc_time_val.tm_mday, rtc_time_val.tm_hour,
 		 rtc_time_val.tm_min, rtc_time_val.tm_sec);
-}
-
-static void kbox_handle_panic_dump(const char *msg)
-{
-	if (msg) {
-		kbox_dump_painc_info("panic string: %s\n", msg);
-	}
 }
 
 void kbox_dump_event(enum kbox_error_type_e type, unsigned long event,
@@ -143,9 +136,13 @@ void kbox_dump_event(enum kbox_error_type_e type, unsigned long event,
 
 	switch (type) {
 	case KBOX_REBOOT_EVENT:
+		kbox_dump_painc_info("reboot, event: 0x%lx, msg: %s\n", event, msg);
+		break;
 	case KBOX_DIE_EVENT:
+		kbox_dump_painc_info("die, event: 0x%lx, msg: %s\n", event, msg);
+		break;
 	case KBOX_PANIC_EVENT:	
-		kbox_handle_panic_dump(msg);
+		kbox_dump_painc_info("panic event: 0x%lx, msg: %s\n", event, msg);
 		break;
 	default:
 		break;
