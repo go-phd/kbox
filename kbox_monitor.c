@@ -2,6 +2,7 @@
 #include <linux/kthread.h>
 #include <linux/delay.h>
 
+#include "kbox_console.h"
 #include "kbox_monitor.h"
 #include "kbox_netlink.h"
 
@@ -13,6 +14,9 @@ static void monitor_cpu(struct kbox_monitor_s *monitor)
 	int ret = 0;
 	char *kmsg1 = "hello users1!!!";
 	char *kmsg2 = "hello users2!!!";
+
+	// debug
+	return;
 
 	ret = kbox_broadcast(KBOX_NLGRP_DEVICE_EVENT, KBOX_NL_CMD_REBOOT, kmsg1, strlen(kmsg1), GFP_ATOMIC);
 	KBOX_LOG(KLOG_ERROR, "---kbox_broadcast KBOX_NLGRP_DEVICE_EVENT %s, ret = %d\n", kmsg1, ret);
@@ -29,7 +33,8 @@ static int monitor_thread(void *arg)
 	KBOX_LOG(KLOG_DEBUG, "monitor thread start\n");
 
 	while (!kthread_should_stop()) {
-		KBOX_LOG(KLOG_DEBUG, "\n");
+		//KBOX_LOG(KLOG_DEBUG, "\n");
+		kbox_console_debug_print();
 		monitor_cpu(monitor);
 		msleep(KBOX_SLEEP_TIME);
 	}

@@ -6,7 +6,7 @@
 
 #include "kbox.h"
 
-#define KBOX_SLEEP_TIME	1000
+#define KBOX_SLEEP_TIME	3000
 
 struct kbox_monitor_s {
 	struct task_struct *monitor_thread;

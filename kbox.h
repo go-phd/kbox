@@ -6,6 +6,7 @@
 #include <linux/notifier.h>
 #include <linux/ioctl.h>
 
+#define KBOX_VERSION "V1.0.0"
 
 #define UNUSED(x) (x = x)
 
