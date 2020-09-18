@@ -17,27 +17,16 @@ struct kbox_region_arg_s {
 	char *data;
 };
 
-struct printk_ctrl_block_tmp_s {
-	unsigned int start;
-	unsigned int end;
-	unsigned int valid_len;/* valid length of printk section */
+struct kbox_ctrl_block_tmp_s {
+	unsigned int idx;			// current idx
+	unsigned int valid_len;		// valid length 
 };
 
 
 int kbox_read_super_block(struct image_super_block_s *kbox_super_block);
 int kbox_super_block_init(void);
 int kbox_write_panic_info(const char *input_data, unsigned int data_len);
-int kbox_write_thread_info(const char *input_data, unsigned int data_len);
-
-int kbox_write_printk_info(const char *input_data,
-			   struct printk_ctrl_block_tmp_s *printk_ctrl_block_tmp);
-/*
-
-int kbox_read_printk_info(char *input_data,
-			  struct printk_ctrl_block_tmp_s
-			  *printk_ctrl_block_tmp);
-*/
-//char kbox_checksum(const char *input_buf, unsigned int len);
+int kbox_write_printk_info(const char *input_data, unsigned int data_len);
 int kbox_clear_region(enum kbox_section_e  section);
 int kbox_write_to_ram(unsigned long offset, unsigned int count,
 		      const char *data, enum kbox_section_e section);

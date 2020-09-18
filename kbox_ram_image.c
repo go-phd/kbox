@@ -19,7 +19,7 @@ void __iomem *kbox_get_section_addr(enum kbox_section_e  kbox_section)
 	}
 
 	switch (kbox_section) {
-	case KBOX_SECTION_KERNEL:
+	case KBOX_SECTION_SUPER_BLOCK:
 		return kbox_addr;
 
 	case KBOX_SECTION_PANIC1:
@@ -49,8 +49,8 @@ void __iomem *kbox_get_section_addr(enum kbox_section_e  kbox_section)
 unsigned long kbox_get_section_len(enum kbox_section_e  kbox_section)
 {
 	switch (kbox_section) {
-	case KBOX_SECTION_KERNEL:
-		return SECTION_KERNEL_LEN;
+	case KBOX_SECTION_SUPER_BLOCK:
+		return SECTION_SUPER_BLOCK_LEN;
 
 	case KBOX_SECTION_PANIC1:
 	case KBOX_SECTION_PANIC2:
@@ -84,7 +84,7 @@ unsigned long kbox_get_section_phy_addr(enum kbox_section_e  kbox_section)
 	}
 
 	switch (kbox_section) {
-	case KBOX_SECTION_KERNEL:
+	case KBOX_SECTION_SUPER_BLOCK:
 		return kbox_phy_addr;
 
 	case KBOX_SECTION_PANIC1:
@@ -119,7 +119,7 @@ void kbox_init_ram_image(void)
 		g_ram_image.len = KBOX_RESERVERED_MEMORY_LEN;
 #ifdef RAM_IMAGE_TEST
 		//g_ram_image.vir_addr = dma_zalloc_coherent(NULL, KBOX_RESERVERED_MEMORY_LEN,
-		//				       &g_ram_image.phy_addr, GFP_KERNEL);
+		//				       &g_ram_image.phy_addr, GFP_SUPER_BLOCK);
 		g_ram_image.vir_addr = kzalloc(KBOX_RESERVERED_MEMORY_LEN, GFP_KERNEL);
 		if (!g_ram_image.vir_addr) {
 			KBOX_LOG(KLOG_ERROR, "Failed to allocate dma buff\n");

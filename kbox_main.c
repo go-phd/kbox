@@ -6,7 +6,6 @@
 #include "kbox_console.h"
 #include "kbox_notifier.h"
 #include "kbox_netlink.h"
-#include "kbox_output.h"
 #include "kbox_cdev.h"
 #include "kbox_monitor.h"
 #include "kbox_ram_image.h"
@@ -26,17 +25,13 @@ static int __init kbox_init(void)
 	RETURN_VAL_DO_INFO_IF_FAIL(!ret, ret,
 			KBOX_LOG(KLOG_ERROR, "kbox_super_block_init failed! ret = %d\n", ret););
 
-	ret = kbox_init_console();
-	DO_INFO_IF_EXPR_UNLIKELY(ret, 
-        KBOX_LOG(KLOG_ERROR, "kbox_init_console failed! ret = %d\n", ret); goto fail;);
-
-	ret = kbox_init_output();
-	DO_INFO_IF_EXPR_UNLIKELY(ret, 
-        KBOX_LOG(KLOG_ERROR, "kbox_init_output failed! ret = %d\n", ret); goto fail;);
-
 	ret = kbox_init_notifier();
 	DO_INFO_IF_EXPR_UNLIKELY(ret, 
         KBOX_LOG(KLOG_ERROR, "kbox_init_notifier failed! ret = %d\n", ret); goto fail;);
+
+	ret = kbox_init_console();
+	DO_INFO_IF_EXPR_UNLIKELY(ret, 
+        KBOX_LOG(KLOG_ERROR, "kbox_init_console failed! ret = %d\n", ret); goto fail;);
 
 	ret = kbox_init_netlink();
 	DO_INFO_IF_EXPR_UNLIKELY(ret, 
@@ -50,18 +45,16 @@ static int __init kbox_init(void)
 	DO_INFO_IF_EXPR_UNLIKELY(ret,
         KBOX_LOG(KLOG_ERROR, "kbox_init_cdev failed! ret = %d\n", ret); goto fail;);
 
-	
-
 	KBOX_LOG(KLOG_DEBUG, "kbox init ok, version is %s\n", KBOX_VERSION);
 
 	return 0;
 
 fail:
 	kbox_cleanup_console();
-	kbox_cleanup_output();
 	kbox_cleanup_notifier();
 	kbox_cleanup_netlink();
 	kbox_cleanup_monitor();
+	kbox_cleanup_ram_image();
 
     return ret;
 }
@@ -73,7 +66,6 @@ static void __exit kbox_exit(void)
 	kbox_cleanup_monitor();
 	kbox_cleanup_netlink();
 	kbox_cleanup_notifier();
-	kbox_cleanup_output();
 	kbox_cleanup_console();
 	
 	kbox_cleanup_ram_image();

@@ -14,65 +14,73 @@
 
 static char *g_panic_info_buf_tmp;
 static char *g_panic_info_buf;
-
-static unsigned int g_panic_info_start;
-
-static unsigned int g_panic_info_end;
-
-static unsigned int g_panic_info_len;
-
-
-#define LEAPS_THRU_END_OF(y) ((y) / 4 - (y) / 100 + (y) / 400)
-#define LEAP_YEAR(year) \
-	((!((year) % 4) && ((year) % 100)) || !((year) % 400))
-#define MONTH_DAYS(month, year) \
-	(g_day_in_month[(month)] + (int)(LEAP_YEAR(year) && (month == 1)))
-
-
-static DEFINE_SPINLOCK(g_dump_lock);
-
-static const char g_day_in_month[] = {
-	31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
-};
-
+static struct kbox_ctrl_block_tmp_s g_panic_ctrl_block_tmp = { };
 static DEFINE_SPINLOCK(g_panic_buf_lock);
 
-
-static void kbox_emit_syslog_char(const char c)
+void kbox_dump_debug_print(void)
 {
-	if (unlikely(!g_panic_info_buf))
-		return;
+	//int i = 0;
 
-	*(g_panic_info_buf + (g_panic_info_end % SECTION_PANIC_LEN)) = c;
-	g_panic_info_end++;
-
-	if (g_panic_info_end > SECTION_PANIC_LEN)
-		g_panic_info_start++;
-
-	if (g_panic_info_len < SECTION_PANIC_LEN)
-		g_panic_info_len++;
+	KBOX_LOG(KLOG_ERROR, "g_panic_info_buf_tmp = %s\n", g_panic_info_buf_tmp);
+	KBOX_LOG(KLOG_ERROR, "g_panic_info_buf = %s\n", g_panic_info_buf);
+	KBOX_LOG(KLOG_ERROR, "idx = %d, len = %d\n", g_panic_ctrl_block_tmp.idx, g_panic_ctrl_block_tmp.valid_len);
+	/*for (i = 0; i < g_printk_ctrl_block_tmp.valid_len; i++) {
+		printk(KERN_ALERT "0x%x", g_printk_info_buf[i]);
+	}*/
 }
 
-static int kbox_duplicate_syslog_info(const char *syslog_buf,
-				      unsigned int buf_len)
-{
-	unsigned int idx = 0;
-	unsigned long flags = 0;
 
-	if (!syslog_buf)
-		return 0;
+static void kbox_output_syslog_info(void)
+{
+	unsigned long flags = 0;
+	
+	spin_lock_irqsave(&g_panic_buf_lock, flags);
+
+	if (g_panic_ctrl_block_tmp.valid_len == 0) {
+		spin_unlock_irqrestore(&g_panic_buf_lock, flags);
+		return;
+	}
+
+	if (g_panic_ctrl_block_tmp.valid_len < SECTION_PANIC_LEN) {
+		memcpy(g_panic_info_buf_tmp, g_panic_info_buf, g_panic_ctrl_block_tmp.valid_len);
+	} else {
+		int last_len = SECTION_PANIC_LEN - g_panic_ctrl_block_tmp.idx;
+		memcpy(g_panic_info_buf_tmp, g_panic_info_buf + g_panic_ctrl_block_tmp.idx, last_len);
+		memcpy(g_panic_info_buf_tmp + last_len, g_panic_info_buf, g_panic_ctrl_block_tmp.idx);
+	}
+
+	spin_unlock_irqrestore(&g_panic_buf_lock, flags);
+	
+	(void)kbox_write_panic_info(g_panic_info_buf_tmp, g_panic_ctrl_block_tmp.valid_len);
+}
+
+static void kbox_duplicate_syslog_info(const char *buf, unsigned int count)
+{
+	unsigned long flags = 0;
 
 	spin_lock_irqsave(&g_panic_buf_lock, flags);
 
-	for (idx = 0; idx < buf_len; idx++)
-		kbox_emit_syslog_char(*syslog_buf++);
+	if (g_panic_ctrl_block_tmp.idx + count < SECTION_PANIC_LEN) {
+		memcpy(g_panic_info_buf + g_panic_ctrl_block_tmp.idx, buf, count);
+	} else {
+		int last_len = g_panic_ctrl_block_tmp.idx + count - SECTION_PANIC_LEN;
+		int frist_len = count - last_len;
+
+		memcpy(g_panic_info_buf + g_panic_ctrl_block_tmp.idx, buf, frist_len);
+		memcpy(g_panic_info_buf, buf + frist_len, last_len);
+	}
+
+	g_panic_ctrl_block_tmp.idx = (g_panic_ctrl_block_tmp.idx + count) & (SECTION_PANIC_LEN - 1);
+
+	g_panic_ctrl_block_tmp.valid_len += count;
+	if (g_panic_ctrl_block_tmp.valid_len > SECTION_PANIC_LEN) {
+		g_panic_ctrl_block_tmp.valid_len = SECTION_PANIC_LEN;
+	}
 
 	spin_unlock_irqrestore(&g_panic_buf_lock, flags);
-
-	return buf_len;
 }
 				  
-int kbox_dump_painc_info(const char *fmt, ...)
+void kbox_dump_painc_info(const char *fmt, ...)
 {
 	va_list args;
 	int num = 0;
@@ -81,22 +89,20 @@ int kbox_dump_painc_info(const char *fmt, ...)
 	va_start(args, fmt);
 
 	num = vsnprintf(tmp_buf, sizeof(tmp_buf) - 1, fmt, args);
-	if (num >= 0)
-		(void)kbox_duplicate_syslog_info(tmp_buf, num);
-
+	if (num >= 0) {
+		kbox_duplicate_syslog_info(tmp_buf, num);
+	}
 	va_end(args);
-
-	return num;
 }
 
 static void kbox_show_kernel_version(void)
 {
-	(void)kbox_dump_painc_info
+	kbox_dump_painc_info
 		("\nOS : %s,\nRelease : %s,\nVersion : %s,\n",
 		 init_uts_ns.name.sysname,
 		 init_uts_ns.name.release,
 		 init_uts_ns.name.version);
-	(void)kbox_dump_painc_info
+	kbox_dump_painc_info
 		("Machine : %s,\nNodename : %s\n",
 		 init_uts_ns.name.machine,
 		 init_uts_ns.name.nodename);
@@ -104,7 +110,7 @@ static void kbox_show_kernel_version(void)
 
 static void kbox_show_version(void)
 {
-	(void)kbox_dump_painc_info("\nKBOX_VERSION         : %s\n",
+	kbox_dump_painc_info("\nKBOX_VERSION         : %s\n",
 				   KBOX_VERSION);
 }
 
@@ -116,7 +122,7 @@ static void kbox_show_time_stamps(void)
 	ktime_get_coarse_real_ts64(&uptime);
 	rtc_time64_to_tm(uptime.tv_sec, &rtc_time_val);
 
-	(void)kbox_dump_painc_info
+	kbox_dump_painc_info
 		("Current time         : %04d-%02d-%02d %02d:%02d:%02d\n",
 		 rtc_time_val.tm_year + 1900, rtc_time_val.tm_mon + 1,
 		 rtc_time_val.tm_mday, rtc_time_val.tm_hour,
@@ -126,56 +132,14 @@ static void kbox_show_time_stamps(void)
 static void kbox_handle_panic_dump(const char *msg)
 {
 	if (msg) {
-		(void)kbox_dump_painc_info("panic string: %s\n", msg);
+		kbox_dump_painc_info("panic string: %s\n", msg);
 	}
-}
-
-void kbox_output_syslog_info(void)
-{
-	unsigned int start_tmp = 0;
-	unsigned int end_tmp = 0;
-	unsigned int len_tmp = 0;
-	unsigned long flags = 0;
-
-	if (unlikely
-	    (!g_panic_info_buf || !g_panic_info_buf_tmp))
-		return;
-
-	spin_lock_irqsave(&g_panic_buf_lock, flags);
-	if (g_panic_info_len == 0) {
-		spin_unlock_irqrestore(&g_panic_buf_lock, flags);
-		return;
-	}
-
-	start_tmp = (g_panic_info_start % SECTION_PANIC_LEN);
-	end_tmp = ((g_panic_info_end - 1) % SECTION_PANIC_LEN);
-	len_tmp = g_panic_info_len;
-
-	if (start_tmp > end_tmp) {
-		memcpy(g_panic_info_buf_tmp,
-		       (g_panic_info_buf + start_tmp),
-			len_tmp - start_tmp);
-		memcpy((g_panic_info_buf_tmp + len_tmp - start_tmp),
-		       g_panic_info_buf,
-			end_tmp + 1);
-	} else {
-		memcpy(g_panic_info_buf_tmp,
-		       (char *)(g_panic_info_buf + start_tmp),
-			len_tmp);
-	}
-
-	spin_unlock_irqrestore(&g_panic_buf_lock, flags);
-
-	(void)kbox_write_panic_info(g_panic_info_buf_tmp, len_tmp);
 }
 
 void kbox_dump_event(enum kbox_error_type_e type, unsigned long event,
 		     const char *msg)
 {
-	if (!spin_trylock(&g_dump_lock))
-		return;
-
-	(void)kbox_dump_painc_info("\n====kbox begin dumping====\n");
+	kbox_dump_painc_info("\n====kbox begin dumping====\n");
 
 	switch (type) {
 	case KBOX_REBOOT_EVENT:
@@ -193,12 +157,10 @@ void kbox_dump_event(enum kbox_error_type_e type, unsigned long event,
 
 	kbox_show_time_stamps();
 
-	(void)kbox_dump_painc_info("\n====kbox end dump====\n");
+	kbox_dump_painc_info("\n====kbox end dump====\n");
 
 	kbox_output_syslog_info();
 	kbox_output_printk_info();
-
-	spin_unlock(&g_dump_lock);
 }
 
  int kbox_init_dump(void)
@@ -218,6 +180,8 @@ void kbox_dump_event(enum kbox_error_type_e type, unsigned long event,
 		 ret = -ENOMEM;
 		 goto fail;
 	 }
+
+	 memset(&g_panic_ctrl_block_tmp, 0, sizeof(struct kbox_ctrl_block_tmp_s));
  
 	 return ret;
  fail:

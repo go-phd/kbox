@@ -139,7 +139,7 @@ static int kbox_update_super_block(struct image_super_block_s *kbox_super_block)
 	int ret = 0;
 
 	ret = kbox_write_to_ram(0, (unsigned int)sizeof(struct image_super_block_s),
-			      (char *)kbox_super_block, KBOX_SECTION_KERNEL);
+			      (char *)kbox_super_block, KBOX_SECTION_SUPER_BLOCK);
 	if (ret < 0) {
 		KBOX_LOG(KLOG_ERROR, "fail to write superblock data!\n");
 		return ret;
@@ -154,7 +154,7 @@ int kbox_read_super_block(struct image_super_block_s *kbox_super_block)
 
 	ret = kbox_read_from_ram(0, (unsigned int)sizeof(struct image_super_block_s),
 			       (char *)kbox_super_block,
-			       KBOX_SECTION_KERNEL);
+			       KBOX_SECTION_SUPER_BLOCK);
 	if (ret < 0) {
 		KBOX_LOG(KLOG_ERROR, "fail to get superblock data!\n");
 		return ret;
@@ -244,49 +244,10 @@ int kbox_write_panic_info(const char *input_data, unsigned int data_len)
 	return 0;
 }
 
-
-/*
-int kbox_read_printk_info(char *input_data,
-			  struct printk_ctrl_block_tmp_s *printk_ctrl_block_tmp)
-{
-	int read_len = 0;
-	int printk_region = printk_ctrl_block_tmp->printk_region;
-	unsigned int len = 0;
-
-	if (!input_data) {
-		KBOX_LOG(KLOG_ERROR, "input parameter error!\n");
-		return -1;
-	}
-
-	len = g_kbox_super_block.printk_ctrl_blk[printk_region].len;
-	if (len <= 0) {
-		printk_ctrl_block_tmp->end = 0;
-		printk_ctrl_block_tmp->valid_len = 0;
-		return 0;
-	}
-
-	read_len =
-	    kbox_read_from_ram(0, len, input_data,
-			       printk_ctrl_block_tmp->section);
-	if (read_len < 0) {
-		KBOX_LOG(KLOG_ERROR, "fail to read printk information!(1)\n");
-		return -1;
-	}
-
-	printk_ctrl_block_tmp->end = len;
-	printk_ctrl_block_tmp->valid_len = len;
-
-	return 0;
-}
-*/
-
-int kbox_write_printk_info(const char *input_data,
-			   struct printk_ctrl_block_tmp_s *
-			   printk_ctrl_block_tmp)
+int kbox_write_printk_info(const char *input_data, unsigned int data_len)
 {
 	int ret = 0;
 	enum kbox_section_e section = KBOX_SECTION_PRINTK1;
-	unsigned int len = 0;
 
 	if (!input_data) {
 		KBOX_LOG(KLOG_ERROR, "input parameter error!\n");
@@ -299,8 +260,7 @@ int kbox_write_printk_info(const char *input_data,
 		section = KBOX_SECTION_PRINTK1;
 	}
 
-	len = printk_ctrl_block_tmp->valid_len;
-	ret = kbox_write_to_ram(0, len, input_data, section);
+	ret = kbox_write_to_ram(0, data_len, input_data, section);
 	if (ret < 0) {
 		KBOX_LOG(KLOG_ERROR, "fail to save printk information!(1)\n");
 		return -1;

@@ -13,7 +13,7 @@
 #define KBOX_RESERVERED_MEMORY_LEN	4 * 1024 * 1024
 
 enum kbox_section_e {
-	KBOX_SECTION_KERNEL = 1,
+	KBOX_SECTION_SUPER_BLOCK = 1,
 	KBOX_SECTION_PANIC1 = 2,
 	KBOX_SECTION_PRINTK1 = 4,
 	KBOX_SECTION_PANIC2 = 3,
@@ -28,27 +28,12 @@ enum kbox_section_e {
 #define IMAGE_MAGIC (0xB202C086)
 #define VALID_IMAGE(x) (IMAGE_MAGIC == (x)->magic_flag)
 #define SLOT_NUM (2)
-//#define SLOT_LENGTH (128 * 1024)
-#define MAX_RECORD_NO (0xFF)
-#define MAX_USE_NUMS (0xFF)
-
-#define PRINTK_CURR_FLAG ("curr")
-#define PRINTK_LAST_FLAG ("last")
-#define PRINTK_FLAG_LEN (4)
 
 struct panic_ctrl_block_s {
-	unsigned char use_nums;
-	unsigned char number;
-	unsigned short len;
-	unsigned int time;
-};
-
-struct thread_info_ctrl_block_s {
-	unsigned int thread_info_len;
+	unsigned char len;
 };
 
 struct printk_info_ctrl_block_s {
-	unsigned char flag[PRINTK_FLAG_LEN];
 	unsigned int len;
 };
 
@@ -61,13 +46,13 @@ struct image_super_block_s {
 	struct printk_info_ctrl_block_s printk_ctrl_blk[SLOT_NUM];
 }__attribute__((aligned));
 
-#define SECTION_KERNEL_LEN 1024	//(sizeof(struct image_super_block_s))
+#define SECTION_SUPER_BLOCK_LEN 1024
 #define SECTION_PANIC_LEN 128 * 1024
 #define SECTION_PRINTK_LEN (512 * 1024)
-#define SECTION_USER_LEN (KBOX_RESERVERED_MEMORY_LEN - SECTION_KERNEL_LEN - 2 * SECTION_PANIC_LEN - 2 * SECTION_PRINTK_LEN)
+#define SECTION_USER_LEN (KBOX_RESERVERED_MEMORY_LEN - SECTION_SUPER_BLOCK_LEN - 2 * SECTION_PANIC_LEN - 2 * SECTION_PRINTK_LEN)
 
-#define SECTION_KERNEL_OFFSET (0)
-#define SECTION_PANIC1_OFFSET SECTION_KERNEL_LEN
+#define SECTION_SUPER_BLOCK_OFFSET (0)
+#define SECTION_PANIC1_OFFSET SECTION_SUPER_BLOCK_LEN
 #define SECTION_PRINTK1_OFFSET (SECTION_PANIC1_OFFSET + SECTION_PANIC_LEN)
 #define SECTION_PANIC2_OFFSET (SECTION_PRINTK1_OFFSET + SECTION_PRINTK_LEN)
 #define SECTION_PRINTK2_OFFSET (SECTION_PANIC2_OFFSET + SECTION_PANIC_LEN)
