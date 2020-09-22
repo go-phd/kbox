@@ -5,6 +5,8 @@
 #include <asm/ioctls.h>
 #include <linux/slab.h>
 #include <linux/mm.h>
+#include <phd/phdlsm.h>
+
 
 #include "kbox_cdev.h"
 #include "kbox_ram_image.h"
@@ -83,7 +85,7 @@ static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				return -EINVAL;
 			}
 			
-			return add_ctrl_current_pid((enum phdlsm_type_e)lsmset.type);
+			return add_ctrl_current_pid((enum phdlsm_type_e)lsmset.type, lsmset.service_name);
 		}
 		
 	case KBOX_ISM_SET_DISK_CTRL_FILE:
@@ -95,7 +97,7 @@ static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				return -EINVAL;
 			}
 			
-			return add_ctrl_file((enum phdlsm_type_e)lsmset.type, lsmset.filename);
+			return add_ctrl_file((enum phdlsm_type_e)lsmset.type, lsmset.file_name);
 		}
 	default:
 		return -ENOTTY;
@@ -106,8 +108,8 @@ static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 static int kbox_mmap(struct file *filp, struct vm_area_struct *vma)
 {
-	unsigned long kbox_section_phy_addr = kbox_get_section_phy_addr(KBOX_SECTION_ALL);
-	unsigned long kbox_section_len = kbox_get_section_len(KBOX_SECTION_ALL);
+	unsigned long kbox_section_phy_addr = kbox_get_section_phy_addr(KBOX_SECTION_USER);
+	unsigned long kbox_section_len = kbox_get_section_len(KBOX_SECTION_USER);
 	unsigned long offset = 0;
 	unsigned long length = 0;
 	unsigned long vm_size = 0;

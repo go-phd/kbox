@@ -16,12 +16,13 @@
 #define KBOX_ISM_SET_DISK_CTRL_FILE _IOW(KBOX_IOC_MAGIC, 3, unsigned long)
 
 #define KBOX_IOC_MAXNR 4
-/*
+
 struct kbox_ioctl_lsm_set_s {
 	u32 type;
-	char filename[PHDLSM_FILE_PATH_MAX_LEN];
+	char service_name[PHDLSM_NAME_MAX_LEN];
+	char file_name[PHDLSM_FILE_PATH_MAX_LEN];
 };
-*/
+
 
 
 struct kbox_dev_s {
