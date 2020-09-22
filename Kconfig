@@ -1,0 +1,10 @@
+menu "KBOX support"
+
+comment "KBOX Driver is ......."
+
+config KBOX
+	tristate "KBOX support"
+	help
+	  This is kbox driver.
+
+endmenu
