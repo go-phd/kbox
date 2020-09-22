@@ -6,11 +6,11 @@
 #include <linux/version.h>
 #include <linux/proc_fs.h>
 #include <asm/mce.h>
+#include <phd/kbox.h>
 
 #include "kbox_notifier.h"
 #include "kbox_collect.h"
 #include "kbox_console.h"
-#include "kbox_output.h"
 #include "kbox_netlink.h"
 #include "kbox_dump.h"
 

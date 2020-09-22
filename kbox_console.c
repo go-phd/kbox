@@ -2,6 +2,7 @@
 #include <linux/console.h>
 #include <linux/spinlock.h>
 #include <linux/slab.h>
+#include <phd/kbox.h>
 
 #include "kbox_ram_op.h"
 #include "kbox_console.h"

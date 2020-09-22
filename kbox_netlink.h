@@ -10,7 +10,6 @@
 #include <linux/mutex.h>
 #include <linux/err.h>
 
-#include "kbox.h"
 
 #define NETLINK_SSF     30
 

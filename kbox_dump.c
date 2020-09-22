@@ -3,6 +3,7 @@
 #include <linux/utsname.h>		/* system_utsname */
 #include <linux/rtc.h>		/* struct rtc_time */
 #include <linux/slab.h>
+#include <phd/kbox.h>
 
 #include "kbox_ram_image.h"
 #include "kbox_ram_op.h"

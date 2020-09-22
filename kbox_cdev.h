@@ -4,8 +4,7 @@
 
 #include <linux/types.h>
 #include <linux/atomic.h>
-
-#include "kbox.h"
+#include <phd/phdlsm.h>
 
 
 #define KBOX_IOC_MAGIC (0x20)

@@ -1,6 +1,7 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 #include <net/netlink.h>
+#include <phd/kbox.h>
 
 #include "kbox_netlink.h"
 

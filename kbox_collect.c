@@ -1,6 +1,8 @@
 
 #include <linux/types.h>
 #include <linux/slab.h>
+#include <phd/kbox.h>
+
 #include "kbox_collect.h"
 
 struct kbox_collect_info_s *g_collect_info = NULL;

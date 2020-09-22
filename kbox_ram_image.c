@@ -2,6 +2,7 @@
 #include <asm/io.h>
 #include <linux/dma-mapping.h>
 #include <linux/slab.h>
+#include <phd/kbox.h>
 
 #include "kbox_ram_image.h"
 

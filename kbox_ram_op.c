@@ -6,6 +6,7 @@
 #include <linux/uaccess.h>		/* copy_*_user */
 #include <linux/delay.h>		/* udelay */
 #include <linux/mm.h>
+#include <phd/kbox.h>
 
 #include "kbox_ram_image.h"
 #include "kbox_ram_op.h"

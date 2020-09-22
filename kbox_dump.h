@@ -2,8 +2,6 @@
 #ifndef _KBOX_DUMP_H_
 #define _KBOX_DUMP_H_
 
-#include "kbox.h"
-
 enum kbox_error_type_e {
 	KBOX_MCE_EVENT = 1,
 	KBOX_OPPS_EVENT,

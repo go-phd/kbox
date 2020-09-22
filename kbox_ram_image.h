@@ -2,8 +2,6 @@
 #ifndef _KBOX_RAM_IMAGE_H_
 #define _KBOX_RAM_IMAGE_H_
 
-#include "kbox.h"
-
 //#define RAM_IMAGE_TEST
 
 // 保留内存物理起始地址

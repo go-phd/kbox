@@ -4,8 +4,6 @@
 
 #include <linux/sched.h>
 
-#include "kbox.h"
-
 #define KBOX_SLEEP_TIME	3000
 
 struct kbox_monitor_s {

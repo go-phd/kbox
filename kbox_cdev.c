@@ -5,8 +5,8 @@
 #include <asm/ioctls.h>
 #include <linux/slab.h>
 #include <linux/mm.h>
-#include <phd/phdlsm.h>
-
+#include <linux/uaccess.h>
+#include <phd/kbox.h>
 
 #include "kbox_cdev.h"
 #include "kbox_ram_image.h"
@@ -62,8 +62,6 @@ static int kbox_ioctl_verify_cmd(unsigned int cmd, unsigned long arg)
 
 static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
-	int ret = 0;
-	
 	UNUSED(filp);
 
 	if (kbox_ioctl_verify_cmd(cmd, arg) < 0) {
@@ -80,27 +78,33 @@ static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	case KBOX_ISM_SET_DISK_CTRL_PID:
 		{
 			struct kbox_ioctl_lsm_set_s lsmset = {};
-			if (copy_to_user((void __user *)arg, (void *)&lsmset, PHDLSM_FILE_PATH_MAX_LEN)) {
+			if (copy_from_user((void *)&lsmset, (void __user *)arg, sizeof(struct kbox_ioctl_lsm_set_s))) {
 				KBOX_LOG(KLOG_ERROR, "fail to copy_to_user!\n");
 				return -EINVAL;
 			}
+
+			KBOX_LOG(KLOG_DEBUG, "type = %d, service_name = %s\n", lsmset.type, lsmset.service_name);
 			
 			return add_ctrl_current_pid((enum phdlsm_type_e)lsmset.type, lsmset.service_name);
 		}
-		
+		break;
 	case KBOX_ISM_SET_DISK_CTRL_FILE:
 		{
 		struct kbox_ioctl_lsm_set_s lsmset = {};
 			
-			if (copy_to_user((void __user *)arg, (void *)&lsmset, PHDLSM_FILE_PATH_MAX_LEN)) {
+			if (copy_from_user((void *)&lsmset, (void __user *)arg, sizeof(struct kbox_ioctl_lsm_set_s))) {
 				KBOX_LOG(KLOG_ERROR, "fail to copy_to_user!\n");
 				return -EINVAL;
 			}
+
+			KBOX_LOG(KLOG_DEBUG, "type = %d, file_name = %s\n", lsmset.type, lsmset.file_name);
 			
 			return add_ctrl_file((enum phdlsm_type_e)lsmset.type, lsmset.file_name);
 		}
+		break;
 	default:
-		return -ENOTTY;
+		KBOX_LOG(KLOG_DEBUG, "cmd fail, 0x%x\n", cmd);
+		return -EINVAL;
 	}
 
 	return 0;

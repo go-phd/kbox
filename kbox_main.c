@@ -2,7 +2,7 @@
 #include <linux/version.h>
 #include <linux/proc_fs.h>
 
-#include "kbox.h"
+#include <phd/kbox.h>
 #include "kbox_console.h"
 #include "kbox_notifier.h"
 #include "kbox_netlink.h"

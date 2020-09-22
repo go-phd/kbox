@@ -1,6 +1,7 @@
 
 #include <linux/kthread.h>
 #include <linux/delay.h>
+#include <phd/kbox.h>
 
 #include "kbox_dump.h"
 #include "kbox_console.h"
