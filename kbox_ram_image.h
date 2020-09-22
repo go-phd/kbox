@@ -4,13 +4,13 @@
 
 #include "kbox.h"
 
-#define RAM_IMAGE_TEST
+//#define RAM_IMAGE_TEST
 
-// 保留内存物理地址
-#define KBOX_RESERVERED_MEMORY	0x12345678
+// 保留内存物理起始地址
+#define KBOX_RESERVERED_MEMORY	0xffa00000
 
 // 保留内存容量，至少2MB
-#define KBOX_RESERVERED_MEMORY_LEN	2 * 1024 * 1024
+#define KBOX_RESERVERED_MEMORY_LEN	6225920
 
 enum kbox_section_e {
 	KBOX_SECTION_SUPER_BLOCK = 1,

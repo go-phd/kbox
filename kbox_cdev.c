@@ -60,6 +60,8 @@ static int kbox_ioctl_verify_cmd(unsigned int cmd, unsigned long arg)
 
 static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
+	int ret = 0;
+	
 	UNUSED(filp);
 
 	if (kbox_ioctl_verify_cmd(cmd, arg) < 0) {
@@ -73,9 +75,28 @@ static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	case CLEAR_KBOX_REGION_ALL:
 		break;
 
-	case KBOX_MODIFY_TEST:
-		break;
-
+	case KBOX_ISM_SET_DISK_CTRL_PID:
+		{
+			struct kbox_ioctl_lsm_set_s lsmset = {};
+			if (copy_to_user((void __user *)arg, (void *)&lsmset, PHDLSM_FILE_PATH_MAX_LEN)) {
+				KBOX_LOG(KLOG_ERROR, "fail to copy_to_user!\n");
+				return -EINVAL;
+			}
+			
+			return add_ctrl_current_pid((enum phdlsm_type_e)lsmset.type);
+		}
+		
+	case KBOX_ISM_SET_DISK_CTRL_FILE:
+		{
+		struct kbox_ioctl_lsm_set_s lsmset = {};
+			
+			if (copy_to_user((void __user *)arg, (void *)&lsmset, PHDLSM_FILE_PATH_MAX_LEN)) {
+				KBOX_LOG(KLOG_ERROR, "fail to copy_to_user!\n");
+				return -EINVAL;
+			}
+			
+			return add_ctrl_file((enum phdlsm_type_e)lsmset.type, lsmset.filename);
+		}
 	default:
 		return -ENOTTY;
 	}
