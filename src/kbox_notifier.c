@@ -5,7 +5,7 @@
 #include <linux/slab.h>
 #include <linux/version.h>
 #include <linux/proc_fs.h>
-#include <asm/mce.h>
+//#include <asm/mce.h>
 #include <phd/kbox.h>
 
 #include "kbox_notifier.h"
