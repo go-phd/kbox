@@ -44,6 +44,19 @@ static ssize_t kbox_read(struct file *filp, char __user *data, size_t count,
 }
 
 
+static ssize_t kbox_write(struct file *filp, const char __user *data,
+		   size_t count, loff_t *ppos)
+{
+
+	char *p = NULL;
+
+	// 构造无效地址访问异常宕机
+	*p = 1;
+
+	return 0;
+}
+
+
 static int kbox_ioctl_verify_cmd(unsigned int cmd, unsigned long arg)
 {
 	if (arg == 0 || (_IOC_TYPE(cmd) != KBOX_IOC_MAGIC))
@@ -189,6 +202,7 @@ int kbox_release(struct inode *pinode, struct file *filp)
 const struct file_operations kbox_fops = {
 	.owner = THIS_MODULE,
 	.read = kbox_read,
+	.write = kbox_write,
 	.unlocked_ioctl = kbox_ioctl,
 	.mmap = kbox_mmap,
 	.open = kbox_open,
