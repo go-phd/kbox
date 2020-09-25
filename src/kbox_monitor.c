@@ -11,6 +11,7 @@
 
 struct kbox_monitor_s monitor;
 
+/*
 static void monitor_cpu(struct kbox_monitor_s *monitor)
 {
 	int ret = 0;
@@ -18,6 +19,7 @@ static void monitor_cpu(struct kbox_monitor_s *monitor)
 	char *kmsg2 = "hello users2!!!";
 
 	// debug
+	//kbox_console_debug_print();
 	return;
 
 	ret = kbox_broadcast(KBOX_NLGRP_DEVICE_EVENT, KBOX_NL_CMD_REBOOT, kmsg1, strlen(kmsg1), GFP_ATOMIC);
@@ -26,11 +28,11 @@ static void monitor_cpu(struct kbox_monitor_s *monitor)
 	ret = kbox_broadcast(KBOX_NLGRP_SYSTEM_EVENT, KBOX_NL_CMD_PANIC, kmsg2, strlen(kmsg2), GFP_ATOMIC);
 	KBOX_LOG(KLOG_ERROR, "---kbox_broadcast KBOX_NLGRP_SYSTEM_EVENT %s, ret = %d\n", kmsg2, ret);
 }
-
+*/
 
 static int monitor_thread(void *arg)
 {
-	struct kbox_monitor_s *monitor = (struct kbox_monitor_s *)arg;
+	//struct kbox_monitor_s *monitor = (struct kbox_monitor_s *)arg;
 
 	KBOX_LOG(KLOG_DEBUG, "monitor thread start\n");
 
@@ -39,7 +41,7 @@ static int monitor_thread(void *arg)
 	//kbox_console_debug_print();
 
 	while (!kthread_should_stop()) {
-		monitor_cpu(monitor);
+		//monitor_cpu(monitor);
 		msleep(KBOX_SLEEP_TIME);
 	}
 

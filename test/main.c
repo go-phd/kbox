@@ -38,7 +38,7 @@
 #define SECTION_USER_LEN (KBOX_RESERVERED_MEMORY_LEN - 0x100000)
 #define SECTION_USER_MMAP_LEN SECTION_USER_LEN//((SECTION_USER_LEN / 2) & 0xff100000)
 
-int lddfd;
+int kboxfd;
 
 void *mmap_address = NULL;
 void *mmap_address1 = NULL;
@@ -56,7 +56,7 @@ void write_mmap(void)
 		printf("cnt = 0x%x\n", cnt);
 		for (i = 0; i < cnt; i++) {
 			//pmmap[i] = '8';
-			*(volatile unsigned char *)pmmap = '5';
+			*(volatile unsigned char *)pmmap = '6';
 			pmmap++;
 		}
 		//memcpy(mmap_address, value, strlen(value));
@@ -72,7 +72,7 @@ void write_mmap(void)
 		char *pmmap = (char *)mmap_address1;
 		
 		for (i = 0; i < cnt; i++) {
-			*(volatile unsigned char *)pmmap = '9';
+			*(volatile unsigned char *)pmmap = '6';
 			pmmap++;
 		}
 		//memcpy(mmap_address, value, strlen(value));
@@ -91,7 +91,7 @@ void read_mmap(void)
 		//int cnt = 0;
 		
 		for(i = 0; i < SECTION_USER_MMAP_LEN; i++) {
-			if (i % 1000 == 0) {
+			if (i % 100000 == 0) {
 				printf("i = %d, 0x%x\n", i, p[i]);
 			}
 		}
@@ -114,7 +114,7 @@ void read_to_file(void)
 		printf("mallco revdbuf fail.\n");
 	}
 		
-	rlen = read(lddfd, revdbuf, KBOX_RESERVERED_MEMORY_LEN);
+	rlen = read(kboxfd, revdbuf, KBOX_RESERVERED_MEMORY_LEN);
 	printf("rlen = %d\n", rlen);
 	if (rlen > 0) {
 		int fd = open ("./kbox.log", O_RDWR | O_CREAT);//"wb"
@@ -130,16 +130,16 @@ void read_to_file(void)
 
 int main (int argc, char *argv[])
 {
-	lddfd = open ("/dev/kbox", O_RDWR);//"wb"
-	printf("open(/dev/kbox) lddfd %d\n", lddfd);
-	if (lddfd < 0)
+	kboxfd = open ("/dev/kbox", O_RDWR);//"wb"
+	printf("open(/dev/kbox) kboxfd %d\n", kboxfd);
+	if (kboxfd < 0)
 	{
 		printf("open(/dev/kbox) fail\n");
 		return -1;
 	}
 
-	mmap_address = mmap(0, SECTION_USER_MMAP_LEN, PROT_READ | PROT_WRITE, /*MAP_FILE  | *//*MAP_PRIVATE*/MAP_SHARED, lddfd, 0);
-	//mmap_address1 = mmap(0, SECTION_USER_MMAP_LEN, PROT_READ | PROT_WRITE, /*MAP_FILE  | *//*MAP_PRIVATE*/MAP_SHARED, lddfd, SECTION_USER_MMAP_LEN);
+	mmap_address = mmap(0, SECTION_USER_MMAP_LEN, PROT_READ | PROT_WRITE, /*MAP_FILE  | *//*MAP_PRIVATE*/MAP_SHARED, kboxfd, 0);
+	//mmap_address1 = mmap(0, SECTION_USER_MMAP_LEN, PROT_READ | PROT_WRITE, /*MAP_FILE  | *//*MAP_PRIVATE*/MAP_SHARED, kboxfd, SECTION_USER_MMAP_LEN);
 	printf("--SIMPLE_DBG--, SECTION_USER_LEN = %d, SECTION_USER_MMAP_LEN = %d\n", SECTION_USER_LEN, SECTION_USER_MMAP_LEN);
 	printf("mmap_address = %p, mmap_address1 = %p\n", mmap_address, mmap_address1);
 
@@ -161,7 +161,7 @@ int main (int argc, char *argv[])
 		printf("mmap_address1 = %p\n", mmap_address1);
 	}
 
-	close(lddfd);
+	close(kboxfd);
 	
 	return 0;	
 }

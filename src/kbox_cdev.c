@@ -32,8 +32,8 @@ static ssize_t kbox_read(struct file *filp, char __user *data, size_t count,
 	}
 
 	// test
-	kbox_panic_event(NULL, 1, "test panic");
-	kbox_console_debug_print();
+	//kbox_panic_event(NULL, 1, "test panic");
+	//kbox_console_debug_print();
 
 	read_len = kbox_read_op((long long)(*ppos),
 				count,
