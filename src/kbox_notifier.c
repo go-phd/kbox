@@ -83,22 +83,22 @@ static int kbox_die_event(struct notifier_block *this,
 
 	UNUSED(this);
 
-	count += snprintf(str_buf, sizeof(str_buf), "die! event : 0x%lx\n", event);
+	count += snprintf(str_buf + count, sizeof(str_buf) - count, "die! event : 0x%lx\n", event);
 	
 	if (ptr) {
 		int i = 0;
 		char *p = (char *)&(die->regs->user_regs);
 		
-		count += snprintf(str_buf, sizeof(str_buf), "die_args : \n");
-		count += snprintf(str_buf, sizeof(str_buf), "str : %s, err : 0x%lx, trapnr : 0x%x, signr : 0x%x\n", die->str, die->err, die->trapnr, die->signr);
-		count += snprintf(str_buf, sizeof(str_buf), "die->regs : \n");
-		count += snprintf(str_buf, sizeof(str_buf), "orig_x0 : 0x%llx, syscallno : 0x%llx, orig_addr_limit : 0x%llx\n", die->regs->orig_x0, die->regs->syscallno, die->regs->orig_addr_limit);
-		count += snprintf(str_buf, sizeof(str_buf), "user_regs : \n");
-		count += snprintf(str_buf, sizeof(str_buf), "user_regs : \n");
+		count += snprintf(str_buf + count, sizeof(str_buf) - count, "die_args : \n");
+		count += snprintf(str_buf + count, sizeof(str_buf) - count, "str : %s, err : 0x%lx, trapnr : 0x%x, signr : 0x%x\n", die->str, die->err, die->trapnr, die->signr);
+		count += snprintf(str_buf + count, sizeof(str_buf) - count, "die->regs : \n");
+		count += snprintf(str_buf + count, sizeof(str_buf) - count, "orig_x0 : 0x%llx, syscallno : 0x%llx, orig_addr_limit : 0x%llx\n", die->regs->orig_x0, die->regs->syscallno, die->regs->orig_addr_limit);
+		count += snprintf(str_buf + count, sizeof(str_buf) - count, "user_regs : \n");
+		count += snprintf(str_buf + count, sizeof(str_buf) - count, "user_regs : \n");
 		for (i = 0; i < sizeof(struct user_pt_regs); i++) {
-			count += snprintf(str_buf, sizeof(str_buf), "0x%x \n", p[i]);
+			count += snprintf(str_buf + count, sizeof(str_buf) - count, "0x%x \n", p[i]);
 		}
-		count += snprintf(str_buf, sizeof(str_buf), "\n");
+		count += snprintf(str_buf + count, sizeof(str_buf) - count, "\n");
 	}
 
 	

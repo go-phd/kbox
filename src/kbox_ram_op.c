@@ -90,7 +90,7 @@ int kbox_write_to_ram(unsigned long offset, unsigned int count,
 	if ((offset + count) > kbox_section_len)
 		write_len_total = (unsigned int)(kbox_section_len - offset);
 
-	KBOX_LOG(KLOG_ERROR, "count = %d\n", count);
+	//KBOX_LOG(KLOG_DEBUG, "count = %d\n", count);
 
 	kbox_write_to_pci(kbox_section_addr, data, write_len_total, offset);
 
