@@ -35,6 +35,9 @@ void __iomem *kbox_get_section_addr(enum kbox_section_e  kbox_section)
 	case KBOX_SECTION_PRINTK2:
 		return kbox_addr + SECTION_PRINTK2_OFFSET;
 
+	case KBOX_SECTION_RESERVE:
+		return kbox_addr + SECTION_RESERVE_OFFSET;
+
 	case KBOX_SECTION_USER:
 		return kbox_addr + SECTION_USER_OFFSET;
 
@@ -60,6 +63,9 @@ unsigned long kbox_get_section_len(enum kbox_section_e  kbox_section)
 	case KBOX_SECTION_PRINTK1:
 	case KBOX_SECTION_PRINTK2:
 		return SECTION_PRINTK_LEN;
+
+	case KBOX_SECTION_RESERVE:
+		return SECTION_RESERVE_LEN;
 
 	case KBOX_SECTION_USER:
 		return SECTION_USER_LEN;
@@ -100,6 +106,9 @@ unsigned long kbox_get_section_phy_addr(enum kbox_section_e  kbox_section)
 	case KBOX_SECTION_PRINTK2:
 		return kbox_phy_addr + SECTION_PRINTK2_OFFSET;
 
+	case KBOX_SECTION_RESERVE:
+		return kbox_phy_addr + SECTION_RESERVE_OFFSET;
+
 	case KBOX_SECTION_USER:
 		return kbox_phy_addr + SECTION_USER_OFFSET;
 
@@ -131,8 +140,16 @@ void kbox_init_ram_image(void)
 #endif
 	}
 
-	KBOX_LOG(KLOG_DEBUG, "vir_addr = %p, phy_addr = 0x%llx\n", g_ram_image.vir_addr, g_ram_image.phy_addr);
-
+	KBOX_LOG(KLOG_DEBUG, "vir_addr = %p, phy_addr = 0x%llx, len = 0x%lx\n", g_ram_image.vir_addr, g_ram_image.phy_addr, g_ram_image.len);
+	
+	KBOX_LOG(KLOG_DEBUG, "phy_addr : \n");
+	KBOX_LOG(KLOG_DEBUG, "KBOX_SECTION_SUPER_BLOCK, addr = %p, phy = 0x%lx, len = 0x%lx\n", kbox_get_section_addr(KBOX_SECTION_SUPER_BLOCK), kbox_get_section_phy_addr(KBOX_SECTION_SUPER_BLOCK), kbox_get_section_len(KBOX_SECTION_SUPER_BLOCK));
+	KBOX_LOG(KLOG_DEBUG, "KBOX_SECTION_PANIC1, addr = %p, phy = 0x%lx, len = 0x%lx\n", kbox_get_section_addr(KBOX_SECTION_PANIC1), kbox_get_section_phy_addr(KBOX_SECTION_PANIC1), kbox_get_section_len(KBOX_SECTION_PANIC1));
+	KBOX_LOG(KLOG_DEBUG, "KBOX_SECTION_PRINTK1, addr = %p, phy = 0x%lx, len = 0x%lx\n", kbox_get_section_addr(KBOX_SECTION_PRINTK1), kbox_get_section_phy_addr(KBOX_SECTION_PRINTK1), kbox_get_section_len(KBOX_SECTION_PRINTK1));
+	KBOX_LOG(KLOG_DEBUG, "KBOX_SECTION_PANIC2, addr = %p, phy = 0x%lx, len = 0x%lx\n", kbox_get_section_addr(KBOX_SECTION_PANIC2), kbox_get_section_phy_addr(KBOX_SECTION_PANIC2), kbox_get_section_len(KBOX_SECTION_PANIC2));
+	KBOX_LOG(KLOG_DEBUG, "KBOX_SECTION_PRINTK2, addr = %p, phy = 0x%lx, len = 0x%lx\n", kbox_get_section_addr(KBOX_SECTION_PRINTK2), kbox_get_section_phy_addr(KBOX_SECTION_PRINTK2), kbox_get_section_len(KBOX_SECTION_PRINTK2));
+	KBOX_LOG(KLOG_DEBUG, "KBOX_SECTION_RESERVE, addr = %p, phy = 0x%lx, len = 0x%lx\n", kbox_get_section_addr(KBOX_SECTION_RESERVE), kbox_get_section_phy_addr(KBOX_SECTION_RESERVE), kbox_get_section_len(KBOX_SECTION_RESERVE));
+	KBOX_LOG(KLOG_DEBUG, "KBOX_SECTION_USER, addr = %p, phy = 0x%lx, len = 0x%lx\n", kbox_get_section_addr(KBOX_SECTION_USER), kbox_get_section_phy_addr(KBOX_SECTION_USER), kbox_get_section_len(KBOX_SECTION_USER));
 }
 
 void kbox_cleanup_ram_image(void)

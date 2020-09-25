@@ -1,6 +1,6 @@
+#include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/version.h>
-#include <linux/proc_fs.h>
+#include <linux/init.h>
 
 #include <phd/kbox.h>
 #include "kbox_console.h"
@@ -14,7 +14,7 @@
 
 int debug_level = 0;
 
-
+#ifdef MODULE
 static int __init kbox_init(void)
 {
     int ret = 0;
@@ -75,10 +75,13 @@ static void __exit kbox_exit(void)
 
 module_init(kbox_init);
 module_exit(kbox_exit);
+#else
+subsys_initcall(kbox_init);
+#endif /* MODULE*/
 
-MODULE_AUTHOR("YCWL TECHNOLOGIES CO., LTD.");
-MODULE_DESCRIPTION("KBOX DRIVER");
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("GPL v2");
+MODULE_AUTHOR("Chen Yan");
+MODULE_DESCRIPTION("Kbox Driver.");
 MODULE_VERSION(KBOX_VERSION);
 
 

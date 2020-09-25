@@ -7,7 +7,8 @@ enum kbox_error_type_e {
 	KBOX_OPPS_EVENT,
 	KBOX_PANIC_EVENT,
 	KBOX_DIE_EVENT,
-	KBOX_REBOOT_EVENT
+	KBOX_REBOOT_EVENT,
+	KBOX_POEWER_SUPPLY_EVENT
 };
 
 void kbox_dump_debug_print(void);

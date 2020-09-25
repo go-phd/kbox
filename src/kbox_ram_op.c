@@ -253,7 +253,7 @@ int kbox_super_block_init(void)
 		return -1;
 	}
 
-	KBOX_LOG(KLOG_DEBUG, "g_kbox_super_block.curr_idx = %d\n", g_kbox_super_block.curr_idx);
+	KBOX_LOG(KLOG_DEBUG, "curr_idx = %d\n", g_kbox_super_block.curr_idx);
 
 	return 0;
 }

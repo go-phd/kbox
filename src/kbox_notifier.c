@@ -1,6 +1,7 @@
 #include <linux/kernel.h>
 #include <linux/kdebug.h>
 #include <linux/notifier.h>
+#include <linux/power_supply.h>
 #include <linux/reboot.h>
 #include <linux/slab.h>
 #include <linux/version.h>
@@ -13,6 +14,34 @@
 #include "kbox_console.h"
 #include "kbox_netlink.h"
 #include "kbox_dump.h"
+
+static int kbox_power_supply_event(struct notifier_block *this,
+		unsigned long event, void *ptr)
+{
+	int ret = 0;
+	char str_buf[512] = {};
+	int count = 0;
+
+	UNUSED(this);
+
+	count = snprintf(str_buf, sizeof(str_buf), "power_supply! event : 0x%lx, msg : %s\n", event, (char *)ptr);
+
+	// 发送消息到用户态进程
+	ret = kbox_broadcast(KBOX_NLGRP_SYSTEM_EVENT, KBOX_NL_CMD_POWER_SUPPLY, str_buf, strlen(str_buf), GFP_ATOMIC);
+	DO_INFO_IF_EXPR_UNLIKELY(ret,
+        KBOX_LOG(KLOG_ERROR, "kbox_broadcast fail, ret = %d\n", ret););
+
+	// dump 数据到 保留内存
+	kbox_dump_event(KBOX_POEWER_SUPPLY_EVENT, event, (const char *)ptr);
+	
+	return NOTIFY_OK;
+}
+
+
+static struct notifier_block kbox_power_supply_block = {
+	.notifier_call	= kbox_power_supply_event,
+	.priority	= INT_MAX,
+};
 
 
 static int kbox_reboot_event(struct notifier_block *this,
@@ -50,18 +79,36 @@ static int kbox_die_event(struct notifier_block *this,
 	int ret = 0;
 	char str_buf[512] = {};
 	int count = 0;
+	struct die_args *die = (struct die_args *)ptr;
 
 	UNUSED(this);
 
-	count = snprintf(str_buf, sizeof(str_buf), "die! event : 0x%lx, msg : %s\n", event, (char *)ptr);
+	count += snprintf(str_buf, sizeof(str_buf), "die! event : 0x%lx\n", event);
+	
+	if (ptr) {
+		int i = 0;
+		char *p = (char *)&(die->regs->user_regs);
+		
+		count += snprintf(str_buf, sizeof(str_buf), "die_args : \n");
+		count += snprintf(str_buf, sizeof(str_buf), "str : %s, err : 0x%lx, trapnr : 0x%x, signr : 0x%x\n", die->str, die->err, die->trapnr, die->signr);
+		count += snprintf(str_buf, sizeof(str_buf), "die->regs : \n");
+		count += snprintf(str_buf, sizeof(str_buf), "orig_x0 : 0x%llx, syscallno : 0x%llx, orig_addr_limit : 0x%llx\n", die->regs->orig_x0, die->regs->syscallno, die->regs->orig_addr_limit);
+		count += snprintf(str_buf, sizeof(str_buf), "user_regs : \n");
+		count += snprintf(str_buf, sizeof(str_buf), "user_regs : \n");
+		for (i = 0; i < sizeof(struct user_pt_regs); i++) {
+			count += snprintf(str_buf, sizeof(str_buf), "0x%x \n", p[i]);
+		}
+		count += snprintf(str_buf, sizeof(str_buf), "\n");
+	}
 
+	
 	// 发送消息到用户态进程
-	ret = kbox_broadcast(KBOX_NLGRP_SYSTEM_EVENT, KBOX_NL_CMD_DIE, str_buf, strlen(str_buf), GFP_ATOMIC);
+	ret = kbox_broadcast(KBOX_NLGRP_SYSTEM_EVENT, KBOX_NL_CMD_DIE, str_buf, count, GFP_ATOMIC);
 	DO_INFO_IF_EXPR_UNLIKELY(ret,
         KBOX_LOG(KLOG_ERROR, "kbox_broadcast fail, ret = %d\n", ret););
 
 	// dump 数据到 保留内存
-	kbox_dump_event(KBOX_DIE_EVENT, event, (const char *)ptr);
+	kbox_dump_event(KBOX_DIE_EVENT, event, (const char *)str_buf);
 	
 	return NOTIFY_OK;
 }
@@ -73,7 +120,7 @@ static struct notifier_block kbox_die_block = {
 };
 
 
-static int kbox_panic_event(struct notifier_block *this,
+int kbox_panic_event(struct notifier_block *this,
 		unsigned long event, void *ptr)
 {
 	int ret = 0;
@@ -110,6 +157,10 @@ int kbox_init_notifier(void)
 	RETURN_VAL_DO_INFO_IF_FAIL(!ret, ret,
 			KBOX_LOG(KLOG_ERROR, "kbox_init_dump failed! ret = %d\n", ret););
 	
+	ret = power_supply_reg_notifier(&kbox_power_supply_block);
+	DO_INFO_IF_EXPR_UNLIKELY(ret, 
+        KBOX_LOG(KLOG_ERROR, "power_supply_reg_notifier failed! ret = %d\n", ret); goto fail;);
+	
 	ret = register_reboot_notifier(&kbox_reboot_block);
 	DO_INFO_IF_EXPR_UNLIKELY(ret, 
         KBOX_LOG(KLOG_ERROR, "register_reboot_notifier failed! ret = %d\n", ret); goto fail;);
@@ -133,6 +184,8 @@ fail:
 void kbox_cleanup_notifier(void)
 {
 	int ret = 0;
+
+	power_supply_unreg_notifier(&kbox_power_supply_block);
 	
 	ret = unregister_reboot_notifier(&kbox_reboot_block);
 	DO_INFO_IF_EXPR_UNLIKELY(ret, 

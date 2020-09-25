@@ -3,6 +3,7 @@
 #include <linux/utsname.h>		/* system_utsname */
 #include <linux/rtc.h>		/* struct rtc_time */
 #include <linux/slab.h>
+#include <linux/time64.h>
 #include <phd/kbox.h>
 
 #include "kbox_ram_image.h"
@@ -85,7 +86,7 @@ void kbox_dump_painc_info(const char *fmt, ...)
 {
 	va_list args;
 	int num = 0;
-	char tmp_buf[PANIC_TMP_BUF_SIZE] = { };
+	char tmp_buf[512] = { };
 
 	va_start(args, fmt);
 
@@ -120,7 +121,7 @@ static void kbox_show_time_stamps(void)
 	struct rtc_time rtc_time_val = { };
 	struct timespec64 uptime;
 
-	ktime_get_coarse_real_ts64(&uptime);
+	getnstimeofday64(&uptime);
 	rtc_time64_to_tm(uptime.tv_sec, &rtc_time_val);
 
 	kbox_dump_painc_info

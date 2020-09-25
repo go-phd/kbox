@@ -12,6 +12,8 @@
 #include "kbox_ram_image.h"
 #include "kbox_ram_op.h"
 #include "kbox_dump.h"
+#include "kbox_notifier.h"
+#include "kbox_console.h"
 
 
 #define KBOX_DEVICE_NAME "kbox"
@@ -30,7 +32,8 @@ static ssize_t kbox_read(struct file *filp, char __user *data, size_t count,
 	}
 
 	// test
-	//kbox_dump_event(KBOX_DIE_EVENT, 1, "test panic");
+	kbox_panic_event(NULL, 1, "test panic");
+	kbox_console_debug_print();
 
 	read_len = kbox_read_op((long long)(*ppos),
 				count,
@@ -88,7 +91,7 @@ static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	case CLEAR_KBOX_REGION_ALL:
 		break;
 
-	case KBOX_ISM_SET_DISK_CTRL_PID:
+	case KBOX_ISM_SET_CTRL_PID:
 		{
 			struct kbox_ioctl_lsm_set_s lsmset = {};
 			if (copy_from_user((void *)&lsmset, (void __user *)arg, sizeof(struct kbox_ioctl_lsm_set_s))) {
@@ -101,7 +104,7 @@ static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			return add_ctrl_current_pid((enum phdlsm_type_e)lsmset.type, lsmset.service_name);
 		}
 		break;
-	case KBOX_ISM_SET_DISK_CTRL_FILE:
+	case KBOX_ISM_SET_CTRL_FILE:
 		{
 		struct kbox_ioctl_lsm_set_s lsmset = {};
 			
@@ -130,6 +133,8 @@ static int kbox_mmap(struct file *filp, struct vm_area_struct *vma)
 	unsigned long offset = 0;
 	unsigned long length = 0;
 	unsigned long vm_size = 0;
+	unsigned long remap_phy_addr = kbox_section_phy_addr;
+		
 	int ret = 0;
 
 	if (!filp || !vma) {
@@ -149,8 +154,13 @@ static int kbox_mmap(struct file *filp, struct vm_area_struct *vma)
 		KBOX_LOG(KLOG_ERROR, "vma is locked!\n");
 		return -EPERM;
 	}
-
+	
 	length = kbox_section_len - offset;
+	remap_phy_addr = kbox_section_phy_addr + offset;
+	
+	KBOX_LOG(KLOG_DEBUG, "offset = %ld, vm_size = %ld, length = %ld\n", offset, vm_size, length);
+	KBOX_LOG(KLOG_DEBUG, "remap_phy_addr= 0x%lx\n", remap_phy_addr);
+	
 	if (vm_size > length) {
 		KBOX_LOG(KLOG_ERROR, "vm_size is invalid!\n");
 		return -ENOSPC;
@@ -161,7 +171,7 @@ static int kbox_mmap(struct file *filp, struct vm_area_struct *vma)
 
 	ret = remap_pfn_range(vma,
 			      vma->vm_start,
-			      (unsigned long)(kbox_section_phy_addr >>
+			      (unsigned long)(remap_phy_addr >>
 					      PAGE_SHIFT), vm_size,
 			      vma->vm_page_prot);
 	if (ret) {

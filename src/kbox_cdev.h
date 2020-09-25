@@ -11,8 +11,9 @@
 
 #define GET_KBOX_TOTAL_LEN _IOR(KBOX_IOC_MAGIC, 0, unsigned long)
 #define CLEAR_KBOX_REGION_ALL _IO(KBOX_IOC_MAGIC, 1)
-#define KBOX_ISM_SET_DISK_CTRL_PID _IOW(KBOX_IOC_MAGIC, 2, unsigned long)
-#define KBOX_ISM_SET_DISK_CTRL_FILE _IOW(KBOX_IOC_MAGIC, 3, unsigned long)
+
+#define KBOX_ISM_SET_CTRL_PID _IOW(KBOX_IOC_MAGIC, 2, unsigned long)
+#define KBOX_ISM_SET_CTRL_FILE _IOW(KBOX_IOC_MAGIC, 3, unsigned long)
 
 #define KBOX_IOC_MAXNR 4
 
@@ -21,7 +22,6 @@ struct kbox_ioctl_lsm_set_s {
 	char service_name[PHDLSM_NAME_MAX_LEN];
 	char file_name[PHDLSM_FILE_PATH_MAX_LEN];
 };
-
 
 
 struct kbox_dev_s {
