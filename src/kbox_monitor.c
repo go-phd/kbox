@@ -65,7 +65,9 @@ int kbox_init_monitor(void)
 
 void kbox_cleanup_monitor(void)
 {
-	kthread_stop(monitor.monitor_thread);
+	if (monitor.monitor_thread) {
+		kthread_stop(monitor.monitor_thread);
+	}
 }
 
 

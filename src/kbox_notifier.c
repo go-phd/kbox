@@ -6,6 +6,9 @@
 #include <linux/slab.h>
 #include <linux/version.h>
 #include <linux/proc_fs.h>
+#include <linux/interrupt.h>
+#include <linux/of_irq.h>
+
 //#include <asm/mce.h>
 #include <phd/kbox.h>
 
@@ -14,6 +17,9 @@
 #include "kbox_console.h"
 #include "kbox_netlink.h"
 #include "kbox_dump.h"
+
+struct kbox_notifier_s *kbox_notifier = NULL;
+
 
 static int kbox_power_supply_event(struct notifier_block *this,
 		unsigned long event, void *ptr)
@@ -149,9 +155,37 @@ static struct notifier_block kbox_panic_block = {
 };
 
 
+irqreturn_t kbox_isr_sb2_dbg(int irq, void *pdev)
+{
+	char str_buf[512] = {};
+	int count = 0;
+	int ret = 0;
+
+	//KBOX_LOG(KLOG_ERROR, "irq = %d, pdev = %p\n", irq, pdev);
+	UNUSED(pdev);
+
+	count = snprintf(str_buf, sizeof(str_buf), "isr_sb2_dbg, may be power input loss");
+
+	// 发送消息到用户态进程
+	ret = kbox_broadcast(KBOX_NLGRP_DEVICE_EVENT, KBOX_NL_CMD_SB2, str_buf, count, GFP_ATOMIC);
+	DO_INFO_IF_EXPR_UNLIKELY(ret,
+        KBOX_LOG(KLOG_ERROR, "kbox_broadcast fail, ret = %d\n", ret););
+
+	// dump 数据到 保留内存
+	kbox_dump_event(KBOX_POEWER_SUPPLY_EVENT, 0, (const char *)str_buf);
+
+	return IRQ_NONE;
+}
+
+
 int kbox_init_notifier(void)
 {
 	int ret = 0;
+	kbox_notifier = kzalloc(sizeof(struct kbox_notifier_s), GFP_KERNEL);
+	if (IS_ERR(kbox_notifier) || !kbox_notifier) {
+		KBOX_LOG(KLOG_ERROR, "kmalloc g_printk_info_buf fail!\n");
+		return -ENOMEM;
+	}
 
 	ret = kbox_init_dump();
 	RETURN_VAL_DO_INFO_IF_FAIL(!ret, ret,
@@ -171,7 +205,13 @@ int kbox_init_notifier(void)
 
 	ret = atomic_notifier_chain_register(&panic_notifier_list, &kbox_panic_block);
 	DO_INFO_IF_EXPR_UNLIKELY(ret, 
-        KBOX_LOG(KLOG_ERROR, "atomic_notifier_chain_register failed! ret = %d\n", ret); goto fail;);
+        KBOX_LOG(KLOG_ERROR, "atomic_notifier_chain_register panic_notifier_list failed! ret = %d\n", ret); goto fail;);
+
+	// 监控 sb2_dbg 中断
+	kbox_notifier->sb2_dbg_irq = 26;
+	ret = request_irq(kbox_notifier->sb2_dbg_irq, kbox_isr_sb2_dbg, IRQF_SHARED, "kbox_sb2_dbg", kbox_notifier);
+	DO_INFO_IF_EXPR_UNLIKELY(ret, 
+        KBOX_LOG(KLOG_ERROR, "request_irq failed! ret = %d\n", ret); goto fail;);
 
 	return 0;
 
@@ -185,6 +225,12 @@ void kbox_cleanup_notifier(void)
 {
 	int ret = 0;
 
+	if (kbox_notifier) {
+		free_irq(kbox_notifier->sb2_dbg_irq, kbox_notifier);
+		kfree(kbox_notifier);
+		kbox_notifier = NULL;
+	}
+	
 	power_supply_unreg_notifier(&kbox_power_supply_block);
 	
 	ret = unregister_reboot_notifier(&kbox_reboot_block);
@@ -197,7 +243,7 @@ void kbox_cleanup_notifier(void)
 
 	ret = atomic_notifier_chain_unregister(&panic_notifier_list, &kbox_panic_block);
 	DO_INFO_IF_EXPR_UNLIKELY(ret, 
-        KBOX_LOG(KLOG_ERROR, "atomic_notifier_chain_unregister failed! ret = %d\n", ret););
+        KBOX_LOG(KLOG_ERROR, "atomic_notifier_chain_unregister panic_notifier_list failed! ret = %d\n", ret););
 
 	kbox_cleanup_dump();
 }

@@ -146,6 +146,9 @@ void kbox_dump_event(enum kbox_error_type_e type, unsigned long event,
 	case KBOX_PANIC_EVENT:	
 		kbox_dump_painc_info("panic event: 0x%lx, msg: %s\n", event, msg);
 		break;
+	case KBOX_POEWER_SUPPLY_EVENT:
+		kbox_dump_painc_info("panic event: 0x%lx, msg: %s\n", event, msg);
+		break;
 	default:
 		break;
 	}
