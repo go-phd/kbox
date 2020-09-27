@@ -8,6 +8,8 @@
 
 #define KBOX_VERSION "V1.0.0"
 
+//#define SUPPORT_LSM
+
 #define UNUSED(x) (x = x)
 
 enum {

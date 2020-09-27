@@ -37,9 +37,9 @@ static int __init kbox_init(void)
 	DO_INFO_IF_EXPR_UNLIKELY(ret, 
         KBOX_LOG(KLOG_ERROR, "kbox_init_netlink failed! ret = %d\n", ret); goto fail;);
 
-	ret = kbox_init_monitor();
-	DO_INFO_IF_EXPR_UNLIKELY(ret,
-        KBOX_LOG(KLOG_ERROR, "kbox_init_monitor failed! ret = %d\n", ret); goto fail;);
+	//ret = kbox_init_monitor();
+	//DO_INFO_IF_EXPR_UNLIKELY(ret,
+    //    KBOX_LOG(KLOG_ERROR, "kbox_init_monitor failed! ret = %d\n", ret); goto fail;);
 
 	ret = kbox_init_cdev();
 	DO_INFO_IF_EXPR_UNLIKELY(ret,
@@ -53,7 +53,7 @@ fail:
 	kbox_cleanup_console();
 	kbox_cleanup_notifier();
 	kbox_cleanup_netlink();
-	kbox_cleanup_monitor();
+	//kbox_cleanup_monitor();
 	kbox_cleanup_ram_image();
 
     return ret;
@@ -63,7 +63,7 @@ fail:
 static void __exit kbox_exit(void)
 {
 	kbox_cleanup_cdev();
-	kbox_cleanup_monitor();
+	//kbox_cleanup_monitor();
 	kbox_cleanup_netlink();
 	kbox_cleanup_notifier();
 	kbox_cleanup_console();

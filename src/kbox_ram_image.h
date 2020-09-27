@@ -29,11 +29,11 @@ enum kbox_section_e {
 #define SLOT_NUM (2)
 
 struct panic_ctrl_block_s {
-	unsigned char len;
+	u32 len;
 };
 
-struct printk_info_ctrl_block_s {
-	unsigned int len;
+struct printk_ctrl_block_s {
+	u32 len;
 };
 
 struct image_super_block_s {
@@ -42,7 +42,7 @@ struct image_super_block_s {
 	u16 version;
 	u32 magic_flag;
 	struct panic_ctrl_block_s panic_ctrl_blk[SLOT_NUM];
-	struct printk_info_ctrl_block_s printk_ctrl_blk[SLOT_NUM];
+	struct printk_ctrl_block_s printk_ctrl_blk[SLOT_NUM];
 }__attribute__((aligned));
 
 // dump 区尺寸为 1MB

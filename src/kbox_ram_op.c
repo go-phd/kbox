@@ -229,7 +229,7 @@ int kbox_super_block_init(void)
 	int ret = 0;
 
 	ret = kbox_read_super_block(&g_kbox_super_block);
-	if (ret != 0) {
+	if (ret < 0) {
 		KBOX_LOG(KLOG_ERROR, "kbox_read_super_block fail!\n");
 		return ret;
 	}
@@ -248,7 +248,8 @@ int kbox_super_block_init(void)
 		g_kbox_super_block.curr_idx = curr_idx;
 	}
 
-	if (kbox_update_super_block(&g_kbox_super_block) != 0) {
+	ret = kbox_update_super_block(&g_kbox_super_block);
+	if (ret < 0) {
 		KBOX_LOG(KLOG_ERROR, "kbox_update_super_block failed!\n");
 		return -1;
 	}
@@ -292,6 +293,20 @@ int kbox_write_panic_info(const char *input_data, unsigned int data_len)
 		return ret;
 	}
 
+	ret = kbox_read_super_block(&g_kbox_super_block);
+	if (ret < 0) {
+		KBOX_LOG(KLOG_ERROR, "kbox_read_super_block fail!\n");
+		return ret;
+	}
+
+	g_kbox_super_block.panic_ctrl_blk[g_kbox_super_block.curr_idx].len = data_len_real;
+
+	ret = kbox_update_super_block(&g_kbox_super_block);
+	if ( ret <  0) {
+		KBOX_LOG(KLOG_ERROR, "kbox_update_super_block failed!\n");
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -314,6 +329,20 @@ int kbox_write_printk_info(const char *input_data, unsigned int data_len)
 	ret = kbox_write_to_ram(0, data_len, input_data, section);
 	if (ret < 0) {
 		KBOX_LOG(KLOG_ERROR, "fail to save printk information!(1)\n");
+		return -1;
+	}
+
+	ret = kbox_read_super_block(&g_kbox_super_block);
+	if (ret < 0) {
+		KBOX_LOG(KLOG_ERROR, "kbox_read_super_block fail!\n");
+		return ret;
+	}
+
+	g_kbox_super_block.printk_ctrl_blk[g_kbox_super_block.curr_idx].len = data_len;
+
+	ret = kbox_update_super_block(&g_kbox_super_block);
+	if ( ret <  0) {
+		KBOX_LOG(KLOG_ERROR, "kbox_update_super_block failed!\n");
 		return -1;
 	}
 

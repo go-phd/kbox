@@ -11,9 +11,8 @@
 #include "kbox_cdev.h"
 #include "kbox_ram_image.h"
 #include "kbox_ram_op.h"
-#include "kbox_dump.h"
 #include "kbox_notifier.h"
-#include "kbox_console.h"
+#include "kbox_netlink.h"
 
 
 #define KBOX_DEVICE_NAME "kbox"
@@ -31,10 +30,6 @@ static ssize_t kbox_read(struct file *filp, char __user *data, size_t count,
 		return -EFAULT;
 	}
 
-	// test
-	//kbox_panic_event(NULL, 1, "test panic");
-	//kbox_console_debug_print();
-
 	read_len = kbox_read_op((long long)(*ppos),
 				count,
 				data);
@@ -46,7 +41,7 @@ static ssize_t kbox_read(struct file *filp, char __user *data, size_t count,
 	return read_len;
 }
 
-
+/*
 static ssize_t kbox_write(struct file *filp, const char __user *data,
 		   size_t count, loff_t *ppos)
 {
@@ -58,7 +53,7 @@ static ssize_t kbox_write(struct file *filp, const char __user *data,
 
 	return 0;
 }
-
+*/
 
 static int kbox_ioctl_verify_cmd(unsigned int cmd, unsigned long arg)
 {
@@ -76,6 +71,35 @@ static int kbox_ioctl_verify_cmd(unsigned int cmd, unsigned long arg)
 	return 0;
 }
 
+static long kbox_ioctl_test(struct kbox_ioctl_test_s *test)
+{
+	int ret = 0;
+
+	switch (test->type) {
+	case KBOX_TEST_NETLINK:
+		{
+			char *kmsg = "hello users, TEST!";
+
+			if (test->u.nl_group == KBOX_NLGRP_DEVICE_EVENT) {
+				ret = kbox_broadcast(KBOX_NLGRP_DEVICE_EVENT, KBOX_NL_CMD_TEST, kmsg, strlen(kmsg), GFP_KERNEL);
+				RETURN_VAL_DO_INFO_IF_FAIL(!ret, ret,
+					KBOX_LOG(KLOG_ERROR, "kbox_broadcast failed! ret = %d\n", ret););
+			} else {
+				ret = kbox_broadcast(KBOX_NLGRP_SYSTEM_EVENT, KBOX_NL_CMD_TEST, kmsg, strlen(kmsg), GFP_KERNEL);
+				RETURN_VAL_DO_INFO_IF_FAIL(!ret, ret,
+					KBOX_LOG(KLOG_ERROR, "kbox_broadcast failed! ret = %d\n", ret););
+			}
+		}
+		break;
+
+	default:
+		KBOX_LOG(KLOG_DEBUG, "test->type fail, 0x%x\n", test->type);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	UNUSED(filp);
@@ -88,7 +112,18 @@ static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	case GET_KBOX_TOTAL_LEN:
 		break;
 
-	case CLEAR_KBOX_REGION_ALL:
+	case KBOX_TEST:
+		{
+			struct kbox_ioctl_test_s test = {};
+			if (copy_from_user((void *)&test, (void __user *)arg, sizeof(struct kbox_ioctl_test_s))) {
+				KBOX_LOG(KLOG_ERROR, "fail to copy_to_user!\n");
+				return -EINVAL;
+			}
+
+			KBOX_LOG(KLOG_DEBUG, "type = %d\n", test.type);
+			
+			return kbox_ioctl_test(&test);
+		}
 		break;
 
 	case KBOX_ISM_SET_CTRL_PID:
@@ -100,8 +135,12 @@ static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			}
 
 			KBOX_LOG(KLOG_DEBUG, "type = %d, service_name = %s\n", lsmset.type, lsmset.service_name);
-			
+
+	#ifdef SUPPORT_LSM
 			return add_ctrl_current_pid((enum phdlsm_type_e)lsmset.type, lsmset.service_name);
+	#else
+			return -EPERM;
+	#endif
 		}
 		break;
 	case KBOX_ISM_SET_CTRL_FILE:
@@ -114,8 +153,12 @@ static long kbox_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			}
 
 			KBOX_LOG(KLOG_DEBUG, "type = %d, file_name = %s\n", lsmset.type, lsmset.file_name);
-			
+
+	#ifdef SUPPORT_LSM
 			return add_ctrl_file((enum phdlsm_type_e)lsmset.type, lsmset.file_name);
+	#else
+			return -EPERM;
+	#endif
 		}
 		break;
 	default:
@@ -212,7 +255,7 @@ int kbox_release(struct inode *pinode, struct file *filp)
 const struct file_operations kbox_fops = {
 	.owner = THIS_MODULE,
 	.read = kbox_read,
-	.write = kbox_write,
+	//.write = kbox_write,
 	.unlocked_ioctl = kbox_ioctl,
 	.mmap = kbox_mmap,
 	.open = kbox_open,
