@@ -20,7 +20,7 @@
 
 struct kbox_notifier_s *kbox_notifier = NULL;
 
-
+/*
 static int kbox_power_supply_event(struct notifier_block *this,
 		unsigned long event, void *ptr)
 {
@@ -48,23 +48,18 @@ static struct notifier_block kbox_power_supply_block = {
 	.notifier_call	= kbox_power_supply_event,
 	.priority	= INT_MAX,
 };
-
+*/
 
 static int kbox_reboot_event(struct notifier_block *this,
 		unsigned long event, void *ptr)
 {
-	int ret = 0;
+	//int ret = 0;
 	char str_buf[512] = {};
 	int count = 0;
 
 	UNUSED(this);
 
 	count = snprintf(str_buf, sizeof(str_buf), "reboot! event : 0x%lx, msg : %s\n", event, (char *)ptr);
-
-	// 发送消息到用户态进程
-	ret = kbox_broadcast(KBOX_NLGRP_SYSTEM_EVENT, KBOX_NL_CMD_REBOOT, str_buf, strlen(str_buf), GFP_ATOMIC);
-	DO_INFO_IF_EXPR_UNLIKELY(ret,
-        KBOX_LOG(KLOG_ERROR, "kbox_broadcast fail, ret = %d\n", ret););
 
 	// dump 数据到 保留内存
 	kbox_dump_event(KBOX_REBOOT_EVENT, event, (const char *)ptr);
@@ -82,7 +77,7 @@ static struct notifier_block kbox_reboot_block = {
 static int kbox_die_event(struct notifier_block *this,
 		unsigned long event, void *ptr)
 {
-	int ret = 0;
+	//int ret = 0;
 	char str_buf[512] = {};
 	int count = 0;
 	struct die_args *die = (struct die_args *)ptr;
@@ -107,12 +102,6 @@ static int kbox_die_event(struct notifier_block *this,
 		count += snprintf(str_buf + count, sizeof(str_buf) - count, "\n");
 	}
 
-	
-	// 发送消息到用户态进程
-	ret = kbox_broadcast(KBOX_NLGRP_SYSTEM_EVENT, KBOX_NL_CMD_DIE, str_buf, count, GFP_ATOMIC);
-	DO_INFO_IF_EXPR_UNLIKELY(ret,
-        KBOX_LOG(KLOG_ERROR, "kbox_broadcast fail, ret = %d\n", ret););
-
 	// dump 数据到 保留内存
 	kbox_dump_event(KBOX_DIE_EVENT, event, (const char *)str_buf);
 	
@@ -129,18 +118,13 @@ static struct notifier_block kbox_die_block = {
 int kbox_panic_event(struct notifier_block *this,
 		unsigned long event, void *ptr)
 {
-	int ret = 0;
+	//int ret = 0;
 	char str_buf[512] = {};
 	int count = 0;
 
 	UNUSED(this);
 
 	count = snprintf(str_buf, sizeof(str_buf), "panic! event : 0x%lx, msg : %s\n", event, (char *)ptr);
-	
-	// 发送消息到用户态进程
-	ret = kbox_broadcast(KBOX_NLGRP_SYSTEM_EVENT, KBOX_NL_CMD_PANIC, str_buf, count, GFP_ATOMIC);
-	DO_INFO_IF_EXPR_UNLIKELY(ret,
-        KBOX_LOG(KLOG_ERROR, "kbox_broadcast fail, ret = %d\n", ret););
 
 	// dump 数据到 保留内存
 	kbox_dump_event(KBOX_PANIC_EVENT, event, (const char *)ptr);
@@ -159,7 +143,7 @@ irqreturn_t kbox_isr_sb2_dbg(int irq, void *pdev)
 {
 	char str_buf[512] = {};
 	int count = 0;
-	int ret = 0;
+	//int ret = 0;
 
 	//KBOX_LOG(KLOG_ERROR, "irq = %d, pdev = %p\n", irq, pdev);
 	UNUSED(pdev);
@@ -167,9 +151,9 @@ irqreturn_t kbox_isr_sb2_dbg(int irq, void *pdev)
 	count = snprintf(str_buf, sizeof(str_buf), "isr_sb2_dbg, may be power input loss");
 
 	// 发送消息到用户态进程
-	ret = kbox_broadcast(KBOX_NLGRP_DEVICE_EVENT, KBOX_NL_CMD_SB2, str_buf, count, GFP_ATOMIC);
-	DO_INFO_IF_EXPR_UNLIKELY(ret,
-        KBOX_LOG(KLOG_ERROR, "kbox_broadcast fail, ret = %d\n", ret););
+	//ret = kbox_broadcast(KBOX_NLGRP_DEVICE_EVENT, KBOX_NL_CMD_SB2, str_buf, count, GFP_ATOMIC);
+	//DO_INFO_IF_EXPR_UNLIKELY(ret,
+    //    KBOX_LOG(KLOG_ERROR, "kbox_broadcast fail, ret = %d\n", ret););
 
 	// dump 数据到 保留内存
 	kbox_dump_event(KBOX_POEWER_SUPPLY_EVENT, 0, (const char *)str_buf);
@@ -191,9 +175,9 @@ int kbox_init_notifier(void)
 	RETURN_VAL_DO_INFO_IF_FAIL(!ret, ret,
 			KBOX_LOG(KLOG_ERROR, "kbox_init_dump failed! ret = %d\n", ret););
 	
-	ret = power_supply_reg_notifier(&kbox_power_supply_block);
-	DO_INFO_IF_EXPR_UNLIKELY(ret, 
-        KBOX_LOG(KLOG_ERROR, "power_supply_reg_notifier failed! ret = %d\n", ret); goto fail;);
+	//ret = power_supply_reg_notifier(&kbox_power_supply_block);
+	//DO_INFO_IF_EXPR_UNLIKELY(ret,
+    //    KBOX_LOG(KLOG_ERROR, "power_supply_reg_notifier failed! ret = %d\n", ret); goto fail;);
 	
 	ret = register_reboot_notifier(&kbox_reboot_block);
 	DO_INFO_IF_EXPR_UNLIKELY(ret, 
@@ -208,10 +192,10 @@ int kbox_init_notifier(void)
         KBOX_LOG(KLOG_ERROR, "atomic_notifier_chain_register panic_notifier_list failed! ret = %d\n", ret); goto fail;);
 
 	// 监控 sb2_dbg 中断
-	kbox_notifier->sb2_dbg_irq = 26;
-	ret = request_irq(kbox_notifier->sb2_dbg_irq, kbox_isr_sb2_dbg, IRQF_SHARED, "kbox_sb2_dbg", kbox_notifier);
-	DO_INFO_IF_EXPR_UNLIKELY(ret, 
-        KBOX_LOG(KLOG_ERROR, "request_irq failed! ret = %d\n", ret); goto fail;);
+	//kbox_notifier->sb2_dbg_irq = 26;
+	//ret = request_irq(kbox_notifier->sb2_dbg_irq, kbox_isr_sb2_dbg, IRQF_SHARED, "kbox_sb2_dbg", kbox_notifier);
+	//DO_INFO_IF_EXPR_UNLIKELY(ret,
+    //    KBOX_LOG(KLOG_ERROR, "request_irq failed! ret = %d\n", ret); goto fail;);
 
 	return 0;
 
@@ -226,12 +210,12 @@ void kbox_cleanup_notifier(void)
 	int ret = 0;
 
 	if (kbox_notifier) {
-		free_irq(kbox_notifier->sb2_dbg_irq, kbox_notifier);
+		//free_irq(kbox_notifier->sb2_dbg_irq, kbox_notifier);
 		kfree(kbox_notifier);
 		kbox_notifier = NULL;
 	}
 	
-	power_supply_unreg_notifier(&kbox_power_supply_block);
+	//power_supply_unreg_notifier(&kbox_power_supply_block);
 	
 	ret = unregister_reboot_notifier(&kbox_reboot_block);
 	DO_INFO_IF_EXPR_UNLIKELY(ret, 
